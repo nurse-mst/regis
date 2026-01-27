@@ -2,6 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
     <title>NURSE - MST</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -9,12 +10,71 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --primary: #6A1B9A; --secondary: #ffffff; --bg: #f3f0f7; }
-        body { font-family: 'Prompt', sans-serif; background: var(--bg); display: flex; align-items: center; min-height: 100vh; justify-content: center; }
-        .main-card { background: white; width: 100%; max-width: 500px; border-radius: 20px; box-shadow: 0 15px 40px rgba(106,27,154,0.15); padding: 40px 30px; position: relative; margin-top: 50px; }
-        .logo-badge { width: 100px; height: 100px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; top: -50px; left: 50%; transform: translateX(-50%); border: 4px solid var(--secondary); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
-        .btn-purple { background: var(--primary); color: white; border-radius: 12px; font-weight: 600; padding: 12px; border: none; width: 100%; transition: 0.3s; }
-        .btn-admin { position: fixed; top: 20px; right: 20px; background: white; color: var(--primary); border: 2px solid var(--primary); border-radius: 30px; padding: 8px 18px; text-decoration: none; font-weight: 600; font-size: 0.85rem; z-index: 1000; }
-        .form-control, .form-select { border-radius: 12px; }
+        body { 
+            font-family: 'Prompt', sans-serif; 
+            background: var(--bg); 
+            display: flex; 
+            align-items: center; 
+            min-height: 100vh; 
+            justify-content: center; 
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .main-card { 
+            background: white; 
+            width: 100%; 
+            max-width: 450px; 
+            border-radius: 20px; 
+            box-shadow: 0 15px 40px rgba(106,27,154,0.15); 
+            padding: 50px 25px 30px 25px; 
+            position: relative; 
+            margin-top: 50px; 
+        }
+
+        .logo-badge { 
+            width: 90px; height: 90px; 
+            background: white; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            position: absolute; top: -45px; left: 50%; 
+            transform: translateX(-50%); 
+            border: 4px solid var(--secondary); 
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1); 
+            z-index: 10;
+        }
+
+        .btn-purple { 
+            background: var(--primary); color: white; 
+            border-radius: 12px; font-weight: 600; 
+            padding: 14px; border: none; width: 100%; 
+            transition: 0.3s; font-size: 1.1rem;
+        }
+        .btn-purple:active { transform: scale(0.98); }
+
+        .btn-admin { 
+            position: fixed; top: 15px; right: 15px; 
+            background: white; color: var(--primary); 
+            border: 2px solid var(--primary); border-radius: 30px; 
+            padding: 6px 15px; text-decoration: none; 
+            font-weight: 600; font-size: 0.75rem; z-index: 1000; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .form-control, .form-select { border-radius: 12px; padding: 12px; }
+
+        @media (max-width: 380px) {
+            .main-card { padding: 45px 15px 25px 15px; }
+            h3 { font-size: 1.4rem; }
+            .logo-badge { width: 80px; height: 80px; top: -40px; }
+        }
+
+        .swal2-popup {
+            font-family: 'Prompt', sans-serif !important;
+            border-radius: 20px !important;
+            padding: 1em !important;
+            width: 95% !important;
+            max-width: 500px !important;
+        }
     </style>
 </head>
 <body>
@@ -26,7 +86,9 @@
             <h3 class="fw-bold" style="color: var(--primary)">ลงทะเบียนเข้ารับบริการ</h3>
             <p class="text-muted small">ห้องพยาบาลโรงเรียนเมืองสุราษฎร์ธานี</p>
         </div>
-        <div class="mb-4"><input type="tel" id="sid" class="form-control text-center fs-5 fw-bold" maxlength="5" placeholder="กรอกรหัสนักเรียน"></div>
+        <div class="mb-4">
+            <input type="tel" id="sid" class="form-control text-center fs-5 fw-bold" maxlength="5" placeholder="รหัสนักเรียน" inputmode="numeric">
+        </div>
         <button onclick="checkStudent()" class="btn btn-purple shadow">ตรวจสอบข้อมูล <i class="fas fa-search ms-2"></i></button>
         <div class="mt-4"><a href="history.html" class="text-decoration-none text-muted small"><i class="fas fa-history me-1"></i> ดูประวัติการรักษา</a></div>
     </div>
@@ -35,7 +97,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, doc, getDoc, setDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // --- Config ของคุณ ---
         const firebaseConfig = {
             apiKey: "AIzaSyBY2n_f64ayN0Rlsq2x6-HT4NxmcePVCKA",
             authDomain: "nurse-mstsc.firebaseapp.com",
@@ -52,7 +113,7 @@
             const sid = document.getElementById('sid').value;
             if(!sid) return Swal.fire('แจ้งเตือน','กรุณากรอกรหัสนักเรียน','warning');
             
-            Swal.fire({ title: 'กำลังตรวจสอบ...', didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'กำลังตรวจสอบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             
             try {
                 const docRef = doc(db, "students", sid);
@@ -60,60 +121,89 @@
                 Swal.close();
 
                 if (docSnap.exists()) {
-                    confirmVisit(sid, docSnap.data());
+                    const data = docSnap.data();
+                    // ตรวจสอบว่ามีข้อมูล "เบอร์โทร" หรือ "วันเกิด" หรือยัง
+                    if (!data.phone || !data.dob || data.phone.trim() === "") {
+                        registerForm(sid, data); // ส่งข้อมูลเดิมไปเติมในฟอร์ม
+                    } else {
+                        confirmVisit(sid, data);
+                    }
                 } else {
-                    registerForm(sid);
+                    registerForm(sid, null); // รหัสใหม่กริ๊บ
                 }
             } catch(e) {
                 Swal.fire('Error', 'เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + e.message, 'error');
             }
         };
 
-        window.registerForm = (sid) => {
-            let rooms = ''; for(let i=1; i<=10; i++) rooms += `<option value="${i}">ห้อง ${i}</option>`;
+        window.registerForm = (sid, oldData) => {
+            let rooms = ''; for(let i=1; i<=10; i++) rooms += `<option value="${i}" ${oldData?.room == i ? 'selected' : ''}>ห้อง ${i}</option>`;
             let dOpt = '<option value="">วัน</option>'; for(let i=1; i<=31; i++) dOpt += `<option value="${i}">${i}</option>`;
             let mOpt = '<option value="">เดือน</option>'; ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."].forEach((m,i)=> mOpt+=`<option value="${i+1}">${m}</option>`);
-            let yOpt = '<option value="">ปี พ.ศ.</option>'; let cy = new Date().getFullYear()+543; for(let i=cy-10; i>=cy-20; i--) yOpt += `<option value="${i}">${i}</option>`;
+            let yOpt = '<option value="">ปี พ.ศ.</option>'; let cy = new Date().getFullYear()+543; for(let i=cy-5; i>=cy-20; i--) yOpt += `<option value="${i}">${i}</option>`;
 
             Swal.fire({
-                title: 'ลงทะเบียนผู้ป่วยใหม่', width: '600px',
-                html: `<div class="text-start p-1 small" style="font-family:'Prompt'">
+                title: oldData ? 'เพิ่มข้อมูลผู้ป่วยใหม่' : 'ลงทะเบียนผู้ป่วยใหม่',
+                html: `<div class="text-start p-1" style="font-family:'Prompt'; font-size: 0.9rem;">
                     <div class="row g-2 mb-2">
-                        <div class="col-4"><label>คำนำหน้า</label><select id="f1" class="form-select"><option>นาย</option><option>นางสาว</option><option>ด.ช.</option><option>ด.ญ.</option></select></div>
-                        <div class="col-4"><label>ชื่อ</label><input id="f2" class="form-control"></div>
-                        <div class="col-4"><label>สกุล</label><input id="f3" class="form-control"></div>
+                        <div class="col-4"><label class="mb-1">คำนำหน้า</label>
+                            <select id="f1" class="form-select">
+                                <option ${oldData?.prefix === 'นาย' ? 'selected' : ''}>นาย</option>
+                                <option ${oldData?.prefix === 'นางสาว' ? 'selected' : ''}>นางสาว</option>
+                                <option ${oldData?.prefix === 'ด.ช.' ? 'selected' : ''}>ด.ช.</option>
+                                <option ${oldData?.prefix === 'ด.ญ.' ? 'selected' : ''}>ด.ญ.</option>
+                            </select>
+                        </div>
+                        <div class="col-4"><label class="mb-1">ชื่อ</label><input id="f2" class="form-control" value="${oldData?.fname || ''}"></div>
+                        <div class="col-4"><label class="mb-1">สกุล</label><input id="f3" class="form-control" value="${oldData?.lname || ''}"></div>
                     </div>
                     <div class="row g-2 mb-2">
-                        <div class="col-6"><label>ห้อง</label><select id="f7" class="form-select">${rooms}</select></div>
-                        <div class="col-6"><label>เบอร์โทร</label><input id="f4" class="form-control"></div>
+                        <div class="col-6"><label class="mb-1">ห้อง/ชั้น</label><select id="f7" class="form-select">${rooms}</select></div>
+                        <div class="col-6"><label class="mb-1">เบอร์โทร</label><input id="f4" class="form-control" type="tel" value="${oldData?.phone || ''}"></div>
                     </div>
-                    <label>วันเกิด</label><div class="input-group mb-2"><select id="bd_d" class="form-select">${dOpt}</select><select id="bd_m" class="form-select">${mOpt}</select><select id="bd_y" class="form-select">${yOpt}</select></div>
+                    <label class="mb-1">วัน/เดือน/ปีเกิด</label><div class="input-group mb-2"><select id="bd_d" class="form-select">${dOpt}</select><select id="bd_m" class="form-select">${mOpt}</select><select id="bd_y" class="form-select">${yOpt}</select></div>
                     <div class="row g-2 mb-2">
-                         <div class="col-8"><label class="text-danger fw-bold">แพ้ยา/อาหาร</label><input id="f6" class="form-control" value="-"></div>
-                         <div class="col-4"><label>เลือด</label><select id="f5" class="form-select"><option>A</option><option>B</option><option>O</option><option>AB</option></select></div>
+                         <div class="col-8"><label class="text-danger fw-bold mb-1">แพ้ยา/อาหาร</label><input id="f6" class="form-control" value="${oldData?.allergy || '-'}"></div>
+                         <div class="col-4"><label class="mb-1">เลือด</label><select id="f5" class="form-select">
+                            <option ${oldData?.blood === 'A' ? 'selected' : ''}>A</option>
+                            <option ${oldData?.blood === 'B' ? 'selected' : ''}>B</option>
+                            <option ${oldData?.blood === 'O' ? 'selected' : ''}>O</option>
+                            <option ${oldData?.blood === 'AB' ? 'selected' : ''}>AB</option>
+                         </select></div>
                     </div>
-                    <div class="p-2 rounded bg-warning-subtle border border-warning"><label>ผู้ปกครอง</label><input id="f8" class="form-control mb-1"><label>เบอร์ผู้ปกครอง</label><input id="f9" class="form-control"></div>
+                    <div class="p-3 rounded bg-warning-subtle border border-warning mt-3">
+                        <label class="mb-1 fw-bold">ข้อมูลผู้ปกครอง</label>
+                        <input id="f8" class="form-control mb-2" placeholder="ชื่อ-นามสกุล" value="${oldData?.parent || ''}">
+                        <input id="f9" class="form-control" placeholder="เบอร์โทรศัพท์" type="tel" value="${oldData?.parentPhone || ''}">
+                    </div>
                 </div>`,
-                confirmButtonText: 'บันทึก', confirmButtonColor: '#6A1B9A',
+                confirmButtonText: 'บันทึกข้อมูล', confirmButtonColor: '#6A1B9A',
+                showCancelButton: true, cancelButtonText: 'ยกเลิก',
                 preConfirm: () => {
-                    const dob = `${document.getElementById('bd_d').value}/${document.getElementById('bd_m').value}/${document.getElementById('bd_y').value}`;
+                    const d = document.getElementById('bd_d').value;
+                    const m = document.getElementById('bd_m').value;
+                    const y = document.getElementById('bd_y').value;
+                    const f2 = document.getElementById('f2').value.trim();
+                    const f4 = document.getElementById('f4').value.trim();
+                    const f8 = document.getElementById('f8').value.trim();
+                    const f9 = document.getElementById('f9').value.trim();
+
+                    if(!d || !m || !y || !f2 || !f4 || !f8 || !f9) {
+                        Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน (เบอร์โทร/วันเกิด/ผู้ปกครอง)');
+                        return false;
+                    }
                     return {
-                        id: sid,
-                        prefix: document.getElementById('f1').value,
-                        fname: document.getElementById('f2').value,
-                        lname: document.getElementById('f3').value,
-                        phone: document.getElementById('f4').value,
-                        blood: document.getElementById('f5').value,
-                        allergy: document.getElementById('f6').value,
+                        id: sid, prefix: document.getElementById('f1').value,
+                        fname: f2, lname: document.getElementById('f3').value.trim(),
+                        phone: f4, blood: document.getElementById('f5').value,
+                        allergy: document.getElementById('f6').value.trim(),
                         room: document.getElementById('f7').value,
-                        parent: document.getElementById('f8').value,
-                        parentPhone: document.getElementById('f9').value,
-                        dob: dob
+                        parent: f8, parentPhone: f9, dob: `${d}/${m}/${y}`
                     }
                 }
             }).then(async (r) => {
                 if(r.isConfirmed) {
-                    Swal.fire({didOpen:()=>Swal.showLoading()});
+                    Swal.fire({didOpen:()=>Swal.showLoading(), allowOutsideClick: false});
                     await setDoc(doc(db, "students", sid), r.value);
                     window.checkStudent();
                 }
@@ -122,20 +212,22 @@
 
         window.confirmVisit = (sid, data) => {
             Swal.fire({
-                title: 'ยืนยัน',
-                html: `<div class="p-3 border rounded text-start bg-light"><h5 class="text-primary fw-bold mb-1">${data.prefix}${data.fname} ${data.lname}</h5><p class="mb-0 small">ห้อง: ${data.room} | แพ้: <b class="text-danger">${data.allergy}</b></p></div>`,
-                showCancelButton: true, confirmButtonText: 'ยืนยัน', confirmButtonColor: '#6A1B9A'
+                title: 'ยืนยันเข้ารับบริการ',
+                html: `<div class="p-3 border rounded text-start bg-light">
+                        <h5 class="text-primary fw-bold mb-2">${data.prefix}${data.fname} ${data.lname}</h5>
+                        <p class="mb-1 small"><b>ชั้น/ห้อง:</b> ${data.room}</p>
+                        <p class="mb-0 small"><b>ประวัติการแพ้:</b> <span class="text-danger fw-bold">${data.allergy}</span></p>
+                       </div>`,
+                showCancelButton: true, confirmButtonText: 'ยืนยันส่งชื่อ', confirmButtonColor: '#6A1B9A', cancelButtonText: 'ยกเลิก'
             }).then(async (r) => {
                 if(r.isConfirmed) {
+                    Swal.fire({didOpen:()=>Swal.showLoading(), allowOutsideClick: false});
                     await addDoc(collection(db, "visits"), {
-                        studentId: sid,
-                        studentName: `${data.prefix}${data.fname} ${data.lname}`,
-                        room: data.room,
-                        timestamp: serverTimestamp(),
-                        status: "Pending",
+                        studentId: sid, studentName: `${data.prefix}${data.fname} ${data.lname}`,
+                        room: data.room, timestamp: serverTimestamp(), status: "Pending",
                         category: "", detail: "", medicine: ""
                     });
-                    Swal.fire('สำเร็จ', 'ส่งข้อมูลเรียบร้อย', 'success');
+                    Swal.fire('สำเร็จ', 'ส่งข้อมูลไปยังเจ้าหน้าที่แล้ว', 'success');
                     document.getElementById('sid').value = '';
                 }
             });

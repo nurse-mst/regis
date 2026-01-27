@@ -38,7 +38,7 @@
     <div id="loginArea" class="container min-vh-100 d-flex align-items-center justify-content-center">
         <div class="card p-5 text-center" style="max-width:400px; width:100%;">
             <img src="https://i.postimg.cc/gc78j2ZM/IMG-8784.png" width="100" class="mx-auto mb-4 brand-icon">
-            <h4 class="fw-bold mb-2" style="color:var(--primary)">MSTSC Health Care <i class="fas fa-hospital-alt"></i></h4>
+            <h4 class="fw-bold mb-2" style="color:var(--primary)">MST Health Care <i class="fas fa-hospital-alt"></i></h4>
             <p class="text-muted small mb-4">ระบบบริหารจัดการห้องพยาบาล<br>โรงเรียนเมืองสุราษฎร์ธานี</p>
             <button onclick="window.loginGoogle()" class="btn btn-google w-100 mb-3">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="24">
@@ -55,7 +55,7 @@
             <div class="container-fluid">
                 <span class="navbar-brand fw-bold d-flex align-items-center gap-2">
                     <img src="https://i.postimg.cc/gc78j2ZM/IMG-8784.png" width="35" class="bg-white rounded-circle p-1">
-                    <span>NURSE ADMIN <small class="opacity-75 fw-light" style="font-size:0.7em;">v2.5 (Smart Import)</small></span>
+                    <span>NURSE ADMIN <small class="opacity-75 fw-light" style="font-size:0.7em;">v3.0 (Stats & Anti-Dupe)</small></span>
                 </span>
                 <div class="d-flex align-items-center gap-2">
                     <span class="text-white small d-none d-md-block bg-white bg-opacity-10 px-3 py-1 rounded-pill" id="userEmail"><i class="fas fa-spinner fa-spin me-2"></i> Loading...</span>
@@ -79,7 +79,7 @@
                         <div class="col-lg-8">
                             <div class="card mb-4 border-start border-5 border-warning">
                                 <div class="card-body">
-                                    <h5 class="fw-bold text-warning mb-3"><i class="fas fa-user-clock me-2"></i>รอรับบริการ</h5>
+                                    <h5 class="fw-bold text-warning mb-3"><i class="fas fa-user-clock me-2"></i>รอรับบริการ (Real-time)</h5>
                                     <div class="table-responsive">
                                         <table class="table table-hover align-middle">
                                             <tbody id="pendingList">
@@ -111,13 +111,18 @@
 
                         <div class="col-lg-4">
                             <div class="card h-100 border-start border-5 border-primary">
+                                <div class="card-header bg-white pt-3 pb-2">
+                                    <h5 class="fw-bold text-primary mb-2"><i class="fas fa-chart-bar me-2"></i>สถิติการใช้บริการ</h5>
+                                    <input type="month" id="statMonthPicker" class="form-control form-control-sm border-primary" onchange="window.loadMonthlyStats()">
+                                </div>
                                 <div class="card-body">
-                                    <h5 class="fw-bold text-primary mb-4"><i class="fas fa-chart-bar me-2"></i>สถิติวันนี้</h5>
-                                    <canvas id="statChart"></canvas>
+                                    <div style="position: relative; height:250px;">
+                                        <canvas id="statChart"></canvas>
+                                    </div>
                                     <div class="mt-4 text-center">
                                         <div class="p-3 bg-light rounded-3">
                                             <h2 class="fw-bold text-dark m-0" id="totalCases">0</h2>
-                                            <small class="text-muted">เคสทั้งหมดในวันนี้</small>
+                                            <small class="text-muted" id="statLabel">เคสทั้งหมด</small>
                                         </div>
                                     </div>
                                 </div>
@@ -168,7 +173,7 @@
                                         <div class="d-flex justify-content-center gap-3">
                                             <div class="form-check form-check-inline">
                                                 <input class="form-check-input" type="radio" name="impMode" id="modeStd" value="std" checked onchange="updateHint()">
-                                                <label class="form-check-label fw-bold" for="modeStd">👨‍🎓 รายชื่อนักเรียน</label>
+                                                <label class="form-check-label fw-bold" for="modeStd">👨‍🎓 รายชื่อนักเรียน (ข้ามถ้าซ้ำ)</label>
                                             </div>
                                             <div class="form-check form-check-inline">
                                                 <input class="form-check-input" type="radio" name="impMode" id="modeHis" value="his" onchange="updateHint()">
@@ -179,7 +184,7 @@
 
                                     <div class="alert alert-info small text-start" id="hintBox">
                                         <i class="fas fa-info-circle"></i> <b>รูปแบบ:</b> <code>รหัส ชื่อ นามสกุล</code> หรือ <code>รหัส คำนำหน้า ชื่อ นามสกุล</code><br>
-                                        ตัวอย่าง: <code>30101 นายสมชาย ใจดี</code> (ใช้การเว้นวรรค หรือ Tab แบ่งข้อมูล)
+                                        ตัวอย่าง: <code>30101 สมชาย ใจดี</code> (ระบบจะเช็ค รหัส 30101 ถ้ามีแล้วจะข้าม)
                                     </div>
                                     
                                     <div class="form-floating mb-3">
@@ -233,6 +238,12 @@
                 loginBox.style.display = 'none';
                 mainBox.style.display = 'block';
                 document.getElementById('userEmail').innerHTML = `<i class="fas fa-user-circle me-2"></i>${user.email}`;
+                
+                // ตั้งค่าเดือนปัจจุบันให้ Picker
+                const now = new Date();
+                const currentMonth = now.toISOString().slice(0, 7); // YYYY-MM
+                document.getElementById('statMonthPicker').value = currentMonth;
+
                 initSystem();
             } else {
                 loginBox.classList.add('d-flex');
@@ -249,12 +260,14 @@
                 if(data.medicines) defaultMeds = data.medicines;
             }
             startRealtimeListeners();
+            window.loadMonthlyStats(); // Load stats for current month
         }
 
         window.loginGoogle = () => signInWithPopup(auth, provider).catch(e => Swal.fire('Login Error', e.message, 'error'));
         window.logout = () => signOut(auth).then(() => location.reload());
 
         function startRealtimeListeners() {
+            // 1. Pending Queue (Real-time)
             const qPending = query(collection(db, "visits"), where("status", "==", "Pending"), orderBy("timestamp", "asc"));
             onSnapshot(qPending, (snap) => {
                 const html = snap.empty ? `<tr><td class="text-center text-muted py-4"><i class="fas fa-check-circle text-success me-2"></i>ไม่มีเคสรอรับบริการ</td></tr>` : 
@@ -276,10 +289,10 @@
                 document.getElementById('pendingList').innerHTML = html;
             });
 
+            // 2. Today List (Real-time) - ตารางประวัติวันนี้ยังคงเป็น Real-time
             const today = new Date(); today.setHours(0,0,0,0);
             const qToday = query(collection(db, "visits"), where("status", "==", "Completed"), where("timestamp", ">=", today), orderBy("timestamp", "desc"));
             onSnapshot(qToday, (snap) => {
-                document.getElementById('totalCases').innerText = snap.size;
                 const html = snap.docs.map(d => {
                     const v = d.data();
                     return `<tr>
@@ -291,12 +304,61 @@
                     </tr>`;
                 }).join('');
                 document.getElementById('todayList').innerHTML = html || `<tr><td colspan="5" class="text-muted py-4">ยังไม่มีประวัติวันนี้</td></tr>`;
-                updateStats(snap.docs);
             });
 
+            // 3. Students List
             onSnapshot(collection(db, "students"), (snap) => {
                 allStudents = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 filterStd(); 
+            });
+        }
+
+        // --- NEW: Monthly Statistics ---
+        window.loadMonthlyStats = async () => {
+            const picker = document.getElementById('statMonthPicker').value; // YYYY-MM
+            if(!picker) return;
+
+            const [year, month] = picker.split('-').map(Number);
+            const startDate = new Date(year, month - 1, 1);
+            const endDate = new Date(year, month, 0, 23, 59, 59);
+
+            // Update Label
+            const monthNames = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+            document.getElementById('statLabel').innerText = `รวมเดือน ${monthNames[month-1]} ${year+543}`;
+
+            // Query Firestore
+            const q = query(collection(db, "visits"), 
+                where("status", "==", "Completed"), 
+                where("timestamp", ">=", startDate), 
+                where("timestamp", "<=", endDate)
+            );
+
+            const snap = await getDocs(q);
+            document.getElementById('totalCases').innerText = snap.size;
+            updateStatsChart(snap.docs);
+        };
+
+        function updateStatsChart(docs) {
+            const counts = {};
+            docs.forEach(d => { const c = d.data().category || 'ไม่ระบุ'; counts[c] = (counts[c]||0)+1; });
+            const ctx = document.getElementById('statChart');
+            
+            if(window.myChart) window.myChart.destroy();
+            
+            window.myChart = new Chart(ctx, { 
+                type: 'doughnut', 
+                data: { 
+                    labels: Object.keys(counts), 
+                    datasets: [{ 
+                        data: Object.values(counts), 
+                        backgroundColor: ['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40','#C9CBCF'] 
+                    }] 
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10 } } } 
+                } 
             });
         }
 
@@ -381,6 +443,7 @@
                     batch.update(doc(db, "visits", visitId), vData);
                     await batch.commit();
                     Swal.fire({icon:'success', title:'บันทึกเรียบร้อย', timer:1500, showConfirmButton:false});
+                    window.loadMonthlyStats(); // Update stats if month matches
                 }
             });
         };
@@ -543,40 +606,27 @@
             }
         };
 
-        function updateStats(docs) {
-            const counts = {};
-            docs.forEach(d => { const c = d.data().category || 'ไม่ระบุ'; counts[c] = (counts[c]||0)+1; });
-            const ctx = document.getElementById('statChart');
-            if(window.myChart) window.myChart.destroy();
-            window.myChart = new Chart(ctx, { 
-                type: 'doughnut', 
-                data: { 
-                    labels: Object.keys(counts), 
-                    datasets: [{ data: Object.values(counts), backgroundColor: ['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40'] }] 
-                },
-                options: { responsive: true, plugins: { legend: { position: 'bottom' } } } 
-            });
-        }
-
-        // ==============================================
-        // NEW FEATURES: SMART IMPORT V2 & CLEAR DATA
-        // ==============================================
-
+        // --- Helper: Update Hint Text ---
         window.updateHint = () => {
             const mode = document.querySelector('input[name="impMode"]:checked').value;
             const hintBox = document.getElementById('hintBox');
             if(mode === 'std') {
-                hintBox.innerHTML = `<i class="fas fa-info-circle"></i> <b>รูปแบบ:</b> <code>รหัส ชื่อ นามสกุล</code> หรือ <code>รหัส คำนำหน้า ชื่อ นามสกุล</code><br>ตัวอย่าง: <code>30101 สมชาย ใจดี</code>`;
+                hintBox.innerHTML = `<i class="fas fa-info-circle"></i> <b>รูปแบบ:</b> <code>รหัส ชื่อ นามสกุล</code> หรือ <code>รหัส คำนำหน้า ชื่อ นามสกุล</code><br>ตัวอย่าง: <code>30101 สมชาย ใจดี</code> (ระบบจะข้ามถ้ารหัสซ้ำ)`;
             } else {
                 hintBox.innerHTML = `<i class="fas fa-info-circle"></i> <b>รูปแบบ:</b> <code>วันที่ เวลา รหัส ชื่อ อาการ ยา</code> (เว้นวรรค)<br>ตัวอย่าง: <code>25/01/2567 08:30 30101 สมชาย ปวดหัว พารา</code>`;
             }
         };
 
+        // --- NEW: Smart Import V2 (Anti-Duplicate & History) ---
         window.processImport = async () => {
             const mode = document.querySelector('input[name="impMode"]:checked').value;
             const lines = document.getElementById('rawInput').value.split('\n');
             const batch = writeBatch(db);
             let count = 0;
+            let skipped = 0;
+
+            // สร้าง Set ของรหัสที่มีอยู่แล้ว เพื่อเช็คซ้ำ (เร็วมาก)
+            const existingIds = new Set(allStudents.map(s => s.id));
 
             if (mode === 'std') {
                 // --- IMPORT STUDENT LIST ---
@@ -584,22 +634,21 @@
                     const cleanL = l.trim();
                     if(!cleanL) return;
                     
-                    // Regex หา รหัสนักเรียน 5 หลัก
                     const idMatch = cleanL.match(/\b\d{5}\b/);
                     if(idMatch) {
                         const id = idMatch[0];
-                        // ลบรหัสออกจาก String แล้วแบ่งคำด้วยเว้นวรรค
-                        const parts = cleanL.replace(id, '').trim().split(/\s+/);
                         
-                        let prefix = '-', fname = '-', lname = '-';
-                        
-                        if(parts.length >= 3) { // มีคำนำหน้า (นาย สมชาย ใจดี)
-                            prefix = parts[0]; fname = parts[1]; lname = parts[2];
-                        } else if(parts.length == 2) { // ไม่มีคำนำหน้า (สมชาย ใจดี)
-                            fname = parts[0]; lname = parts[1];
-                        } else if(parts.length == 1) {
-                            fname = parts[0];
+                        // *** Anti-Duplicate Check ***
+                        if (existingIds.has(id)) {
+                            skipped++;
+                            return; // Skip this iteration
                         }
+
+                        const parts = cleanL.replace(id, '').trim().split(/\s+/);
+                        let prefix = '-', fname = '-', lname = '-';
+                        if(parts.length >= 3) { prefix = parts[0]; fname = parts[1]; lname = parts[2]; } 
+                        else if(parts.length == 2) { fname = parts[0]; lname = parts[1]; } 
+                        else if(parts.length == 1) { fname = parts[0]; }
 
                         const ref = doc(db, "students", id);
                         batch.set(ref, { 
@@ -611,61 +660,52 @@
                 });
 
             } else {
-                // --- IMPORT HISTORY (OLD SYSTEM) ---
+                // --- IMPORT HISTORY ---
                 lines.forEach(l => {
                     const cleanL = l.trim();
                     if(!cleanL) return;
-
-                    // Split by whitespace
                     const parts = cleanL.split(/\s+/);
-                    
-                    // ต้องมีอย่างน้อย 5 ส่วน: Date, Time, ID, Name, Symptom...
                     if(parts.length >= 5) {
-                        const dateStr = parts[0]; // 25/01/2567
-                        const timeStr = parts[1]; // 08:30
-                        const id = parts[2];      // 30101
-                        
-                        // Parse Date/Time
                         try {
-                            const [day, month, year] = dateStr.split('/').map(Number);
-                            const [hour, min] = timeStr.split(':').map(Number);
-                            
-                            // Handle Buddhist Year (if year > 2400)
+                            const [day, month, year] = parts[0].split('/').map(Number);
+                            const [hour, min] = parts[1].split(':').map(Number);
                             const finalYear = year > 2400 ? year - 543 : year;
                             const dateObj = new Date(finalYear, month - 1, day, hour, min);
 
-                            if(isNaN(dateObj.getTime())) return; // Skip invalid dates
-
-                            // Name, Symptom, Meds are simpler here. 
-                            // Assume Part 3 is Name, Part 4 is Symptom, Rest is Meds
-                            // *To make it smarter, user should align columns, but strict index is safer for simple copy paste*
-                            const name = parts[3];
-                            const symptom = parts[4];
-                            const meds = parts.slice(5).join(' ') || '-';
+                            if(isNaN(dateObj.getTime())) return; 
 
                             const ref = doc(collection(db, "visits"));
                             batch.set(ref, {
-                                studentId: id,
-                                studentName: name, // อาจจะไม่แม่นถ้านามสกุลแยก
-                                category: symptom,
-                                medicine: meds,
+                                studentId: parts[2],
+                                studentName: parts[3],
+                                category: parts[4],
+                                medicine: parts.slice(5).join(' ') || '-',
                                 room: 'OldSystem',
                                 detail: 'Imported Data',
                                 status: 'Completed',
                                 timestamp: dateObj
                             });
                             count++;
-                        } catch(e) { console.log('Skipped line:', l); }
+                        } catch(e) {}
                     }
                 });
             }
 
-            if(count > 0) {
+            if(count > 0 || skipped > 0) {
                 await batch.commit();
-                Swal.fire('Success', `นำเข้าสำเร็จ ${count} รายการ`, 'success');
+                let msg = `นำเข้าสำเร็จ ${count} รายการ`;
+                if(skipped > 0) msg += `<br><span class="text-danger">ข้ามข้อมูลซ้ำ ${skipped} รายการ</span>`;
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'เสร็จสิ้น',
+                    html: msg
+                });
                 document.getElementById('rawInput').value = '';
+                // รีโหลดสถิติเผื่อมีการนำเข้าย้อนหลัง
+                window.loadMonthlyStats();
             } else {
-                Swal.fire('Error', 'ไม่พบข้อมูลที่ถูกต้อง หรือรูปแบบไม่ตรง', 'error');
+                Swal.fire('Error', 'ไม่พบข้อมูลใหม่ หรือข้อมูลซ้ำทั้งหมด', 'error');
             }
         };
 
@@ -689,12 +729,10 @@
                 confirmButtonColor: '#d33',
                 confirmButtonText: 'ยืนยันลบ',
                 cancelButtonText: 'ยกเลิก',
-                preConfirm: () => {
-                    return {
-                        visits: document.getElementById('delVisits').checked,
-                        students: document.getElementById('delStudents').checked
-                    }
-                }
+                preConfirm: () => ({
+                    visits: document.getElementById('delVisits').checked,
+                    students: document.getElementById('delStudents').checked
+                })
             });
 
             if (result.isConfirmed) {
@@ -713,12 +751,12 @@
                 }
 
                 if(count > 0) {
-                    await batch.commit(); // Note: Batch limit is 500, for huge data need loop. But ok for test.
+                    await batch.commit();
                     Swal.fire('Deleted', `ลบข้อมูลเรียบร้อย (${count} records)`, 'success');
-                    // Reset local stats
                     allStudents = []; 
                     document.getElementById('todayList').innerHTML = '';
                     document.getElementById('allTable').innerHTML = '';
+                    window.loadMonthlyStats();
                 } else {
                     Swal.fire('Info', 'ไม่มีข้อมูลให้ลบ', 'info');
                 }
