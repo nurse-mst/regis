@@ -86,13 +86,13 @@
         <div class="logo-badge"><img src="https://i.postimg.cc/gc78j2ZM/IMG-8784.png" width="100%"></div>
         <div class="pt-4 mb-4">
             <h3 class="fw-bold" style="color: var(--primary)">ลงทะเบียนเข้ารับบริการ</h3>
-            <p class="text-muted small">โรงเรียนเมืองสุราษฎร์ธานี</p>
+            <p class="text-muted small">FAR - MST</p>
         </div>
         <div class="mb-4">
             <input type="tel" id="sid" class="form-control text-center fs-5 fw-bold" maxlength="5" placeholder="รหัสนักเรียน" inputmode="numeric">
         </div>
         <button onclick="checkStudent()" class="btn btn-purple shadow">ตรวจสอบข้อมูล / เข้าตรวจ <i class="fas fa-search ms-2"></i></button>
-        <div class="mt-4"><a href="history.html" class="text-decoration-none text-muted small"><i class="fas fa-history me-1"></i> ดูประวัติการรักษาของฉัน</a></div>
+        <div class="mt-4"><a href="history.html" class="text-decoration-none text-muted small"><i class="fas fa-history me-1"></i> ประวัติการรักษา</a></div>
     </div>
 
     <script type="module">
@@ -111,6 +111,13 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // --- เพิ่มฟังก์ชัน Masking สำหรับปิดบังเบอร์โทรศัพท์ ---
+        const maskPhone = (phone) => {
+            if (!phone || phone.length < 10) return "xxxxxxxxxx";
+            // แสดงเฉพาะตัวท้าย 2 ตัว เช่น xxxxxxxx07
+            return "xxxxxxxx" + phone.substring(8);
+        };
+
         window.checkStudent = async () => {
             const sid = document.getElementById('sid').value;
             if(!sid) return Swal.fire('แจ้งเตือน','กรุณากรอกรหัสนักเรียน','warning');
@@ -124,7 +131,6 @@
 
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    // บังคับกรอกข้อมูลเพิ่ม หากเบอร์โทรหาย หรือเบอร์ไม่ครบ 10 หลัก
                     if (!data.phone || data.phone.length < 10 || !data.dob) {
                         registerForm(sid, data); 
                     } else {
@@ -139,7 +145,7 @@
         };
 
         window.registerForm = (sid, oldData) => {
-            let rooms = ''; for(let i=1; i<=12; i++) rooms += `<option value="${i}" ${oldData?.room == i ? 'selected' : ''}>ห้อง ${i}</option>`;
+            let rooms = ''; for(let i=0; i<=10; i++) rooms += `<option value="${i}" ${oldData?.room == i ? 'selected' : ''}>ห้อง ${i}</option>`;
             let dOpt = '<option value="">วัน</option>'; for(let i=1; i<=31; i++) dOpt += `<option value="${i}">${i}</option>`;
             let mOpt = '<option value="">เดือน</option>'; ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."].forEach((m,i)=> mOpt+=`<option value="${i+1}">${m}</option>`);
             let yOpt = '<option value="">ปี พ.ศ.</option>'; let cy = new Date().getFullYear()+543; for(let i=cy-5; i>=cy-20; i--) yOpt += `<option value="${i}">${i}</option>`;
@@ -152,6 +158,7 @@
                         <div class="col-4"><label class="mb-1 small">คำนำหน้า</label>
                             <select id="f1" class="form-select">
                                 <option ${oldData?.prefix === 'นาย' ? 'selected' : ''}>นาย</option>
+                                <option ${oldData?.prefix === 'นาง' ? 'selected' : ''}>นาง</option>
                                 <option ${oldData?.prefix === 'นางสาว' ? 'selected' : ''}>นางสาว</option>
                                 <option ${oldData?.prefix === 'ด.ช.' ? 'selected' : ''}>ด.ช.</option>
                                 <option ${oldData?.prefix === 'ด.ญ.' ? 'selected' : ''}>ด.ญ.</option>
@@ -218,11 +225,14 @@
         };
 
         window.confirmVisit = (sid, data) => {
+            // --- เรียกใช้การปิดบังเบอร์โทรศัพท์ก่อนแสดงผล ---
+            const safePhone = maskPhone(data.phone);
+
             Swal.fire({
                 title: 'ยืนยันข้อมูลเข้ารับบริการ',
                 html: `<div class="p-3 border rounded text-start bg-light">
                         <h5 class="text-primary fw-bold mb-2">${data.prefix}${data.fname} ${data.lname}</h5>
-                        <p class="mb-1 small"><b>เบอร์โทร:</b> ${data.phone}</p>
+                        <p class="mb-1 small"><b>เบอร์โทร:</b> ${safePhone}</p>
                         <p class="mb-1 small"><b>ชั้น/ห้อง:</b> ${data.room}</p>
                         <p class="mb-0 small"><b>ประวัติการแพ้:</b> <span class="text-danger fw-bold">${data.allergy}</span></p>
                        </div>`,
@@ -235,7 +245,7 @@
                         room: data.room, timestamp: serverTimestamp(), status: "Pending",
                         category: "", detail: "", medicine: ""
                     });
-                    Swal.fire('สำเร็จ', 'ส่งรายชื่อเข้าคิวห้องพยาบาลแล้วครับ', 'success');
+                    Swal.fire('สำเร็จ', 'ส่งรายชื่อเข้าคิวห้องพยาบาลแล้ว', 'success');
                     document.getElementById('sid').value = '';
                 }
             });

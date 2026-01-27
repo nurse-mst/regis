@@ -2,24 +2,79 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>ประวัติการรักษา - Nurse MST</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>ประวัติการรักษา - Nurse MST</title>
     <link rel="icon" type="image/png" href="https://i.postimg.cc/gc78j2ZM/IMG-8784.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>body { font-family: 'Prompt', sans-serif; background: #f3f0f7; padding-top: 50px; } .card { border-radius: 20px; }</style>
+    <style>
+        body { 
+            font-family: 'Prompt', sans-serif; 
+            background: #f3f0f7; 
+            padding-top: 20px; /* ลด Padding บนลงเพื่อให้เหมาะกับมือถือ */
+            padding-bottom: 40px;
+        }
+        .container {
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+        .card { 
+            border-radius: 20px; 
+            border: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .form-control {
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 16px; /* ป้องกัน iOS ซูมเข้าตอนกด input */
+        }
+        .btn-check-history {
+            background: #6A1B9A; 
+            color: white;
+            border-radius: 12px;
+            padding: 12px;
+            transition: 0.3s;
+        }
+        .btn-check-history:hover {
+            background: #4a148c;
+            color: white;
+        }
+        /* ปรับแต่งส่วนของรายการประวัติ */
+        .history-card {
+            border-left: 5px solid #6A1B9A !important;
+            transition: transform 0.2s;
+        }
+        @media (max-width: 576px) {
+            body { padding-top: 15px; }
+            h5 { font-size: 1.1rem; }
+        }
+    </style>
 </head>
 <body>
     <div class="container" style="max-width:500px;">
         <div class="card p-4 mb-4">
-            <h5 class="fw-bold text-center mb-4" style="color:#6A1B9A">ตรวจสอบประวัติการรักษา</h5>
-            <input type="number" id="sid" class="form-control mb-2" placeholder="รหัสนักเรียน">
-            <input type="tel" id="phone" class="form-control mb-3" placeholder="เบอร์โทรศัพท์">
-            <button onclick="fetchH()" class="btn w-100 fw-bold" style="background:#6A1B9A; color:white;">ตรวจสอบข้อมูล</button>
-            <div class="text-center mt-3"><a href="index.html" class="text-muted small">กลับหน้าหลัก</a></div>
+            <div class="text-center mb-3">
+                <img src="https://i.postimg.cc/gc78j2ZM/IMG-8784.png" width="60" alt="Logo" class="mb-2">
+                <h5 class="fw-bold" style="color:#6A1B9A">ตรวจสอบประวัติการรักษา</h5>
+            </div>
+            <div class="mb-2">
+                <label class="small text-muted mb-1">รหัสนักเรียน</label>
+                <input type="number" id="sid" class="form-control" placeholder="ระบุรหัสนักเรียน">
+            </div>
+            <div class="mb-3">
+                <label class="small text-muted mb-1">เบอร์โทรศัพท์</label>
+                <input type="tel" id="phone" class="form-control" placeholder="ระบุเบอร์โทรศัพท์">
+            </div>
+            <button onclick="fetchH()" class="btn w-100 fw-bold btn-check-history">ตรวจสอบข้อมูล</button>
+            <div class="text-center mt-3"><a href="index.html" class="text-muted small text-decoration-none">← กลับหน้าหลัก</a></div>
         </div>
+
         <div id="res" style="display:none;">
-            <h6 id="uN" class="fw-bold text-center mb-2"></h6>
+            <div class="d-flex align-items-center justify-content-center mb-3">
+                <div style="height:2px; background:#6A1B9A; flex-grow:1;"></div>
+                <h6 id="uN" class="fw-bold mx-3 mb-0 text-dark"></h6>
+                <div style="height:2px; background:#6A1B9A; flex-grow:1;"></div>
+            </div>
             <div id="list"></div>
         </div>
     </div>
@@ -28,7 +83,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, query, where, getDocs, doc, getDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // --- Config ของคุณ ---
         const firebaseConfig = {
             apiKey: "AIzaSyBY2n_f64ayN0Rlsq2x6-HT4NxmcePVCKA",
             authDomain: "nurse-mstsc.firebaseapp.com",
@@ -44,16 +98,31 @@
         window.fetchH = async () => {
             const sid = document.getElementById('sid').value;
             const ph = document.getElementById('phone').value;
-            Swal.fire({didOpen:()=>Swal.showLoading()});
+
+            if(!sid || !ph) {
+                Swal.fire('กรุณากรอกข้อมูล', 'กรุณากรอกรหัสและเบอร์โทรให้ครบถ้วน', 'warning');
+                return;
+            }
+
+            Swal.fire({
+                title: 'กำลังตรวจสอบ...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
 
             try {
                 const sSnap = await getDoc(doc(db, "students", sid));
                 if(!sSnap.exists() || sSnap.data().phone !== ph) {
-                    Swal.fire('ไม่พบข้อมูล','รหัสหรือเบอร์โทรผิด','error');
+                    Swal.fire('ไม่พบข้อมูล','รหัสนักเรียนหรือเบอร์โทรศัพท์ไม่ถูกต้อง','error');
                     return;
                 }
 
-                const q = query(collection(db, "visits"), where("studentId", "==", sid), where("status", "==", "Completed"), orderBy("timestamp", "desc"));
+                const q = query(
+                    collection(db, "visits"), 
+                    where("studentId", "==", sid), 
+                    where("status", "==", "Completed"), 
+                    orderBy("timestamp", "desc")
+                );
                 const querySnapshot = await getDocs(q);
                 
                 Swal.close();
@@ -63,12 +132,32 @@
                 let html = '';
                 querySnapshot.forEach((d) => {
                     const v = d.data();
-                    const date = v.timestamp ? new Date(v.timestamp.seconds * 1000).toLocaleString('th-TH') : '-';
-                    html += `<div class="card p-3 mb-2 shadow-sm border-start border-4 border-primary"><div class="d-flex justify-content-between small fw-bold text-primary"><span>${v.category}</span><span>${date}</span></div><div class="small mt-1">${v.detail}</div><div class="small text-success fw-bold">ยา: ${v.medicine}</div></div>`;
+                    const date = v.timestamp ? new Date(v.timestamp.seconds * 1000).toLocaleString('th-TH', {
+                        year: 'numeric', month: 'short', day: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
+                    }) : '-';
+                    
+                    html += `
+                        <div class="card p-3 mb-3 history-card shadow-sm">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="badge bg-primary rounded-pill">${v.category}</span>
+                                <span class="text-muted" style="font-size: 0.75rem;">${date}</span>
+                            </div>
+                            <div class="fw-bold mb-1" style="font-size: 0.95rem;">อาการ/รายละเอียด:</div>
+                            <div class="text-secondary small mb-2">${v.detail || '-'}</div>
+                            <div class="pt-2 border-top">
+                                <span class="small fw-bold text-success">💊 ยาที่ได้รับ: ${v.medicine || 'ไม่มี'}</span>
+                            </div>
+                        </div>`;
                 });
-                document.getElementById('list').innerHTML = html || '<p class="text-center text-muted">ไม่มีประวัติ</p>';
+                document.getElementById('list').innerHTML = html || '<div class="card p-4 text-center text-muted">ไม่พบประวัติการรักษา</div>';
+                
+                // เลื่อนหน้าจอลงมาดูผลลัพธ์ (สำหรับมือถือ)
+                document.getElementById('res').scrollIntoView({ behavior: 'smooth' });
+
             } catch(e) {
-                Swal.fire('Error', e.message, 'error');
+                console.error(e);
+                Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถดึงข้อมูลได้ กรุณาลองใหม่ภายหลัง', 'error');
             }
         };
     </script>
