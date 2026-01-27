@@ -2,40 +2,81 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>Nurse MSTSC</title>
+    <title>Admin - Nurse MSTSC</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <style>
         :root { --primary: #6A1B9A; --secondary: #FFD600; --bg: #f3f0f7; }
-        body { font-family: 'Prompt', sans-serif; background: var(--bg); display: flex; align-items: center; min-height: 100vh; justify-content: center; }
-        .main-card { background: white; width: 100%; max-width: 500px; border-radius: 20px; box-shadow: 0 15px 40px rgba(106,27,154,0.15); padding: 40px 30px; position: relative; margin-top: 50px; }
-        .logo-badge { width: 100px; height: 100px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; top: -50px; left: 50%; transform: translateX(-50%); border: 4px solid var(--secondary); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
-        .btn-purple { background: var(--primary); color: white; border-radius: 12px; font-weight: 600; padding: 12px; border: none; width: 100%; transition: 0.3s; }
-        .btn-admin { position: fixed; top: 20px; right: 20px; background: white; color: var(--primary); border: 2px solid var(--primary); border-radius: 30px; padding: 8px 18px; text-decoration: none; font-weight: 600; font-size: 0.85rem; z-index: 1000; }
-        .form-control, .form-select { border-radius: 12px; }
+        body { font-family: 'Prompt', sans-serif; background: var(--bg); }
+        .navbar { background: var(--primary) !important; border-bottom: 4px solid var(--secondary); }
+        .card { border-radius: 15px; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .nav-link.active { color: var(--primary) !important; font-weight: bold; border-bottom: 3px solid var(--primary); }
+        .med-container { max-height: 120px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 8px; padding: 10px; background: #fff; }
+        .btn-google { background: white; color: #333; border: 1px solid #ddd; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px; transition: 0.3s; }
+        .btn-google:hover { background: #f1f1f1; }
     </style>
 </head>
 <body>
-    <a href="?page=admin" class="btn-admin"><i class="fas fa-user-shield me-1"></i> สำหรับเจ้าหน้าที่</a>
-    
-    <div class="main-card text-center">
-        <div class="logo-badge"><img src="https://i.postimg.cc/yxjxZmRN/Logo-mstsc-(1)-(1).png" width="100%"></div>
-        <div class="pt-4 mb-4">
-            <h3 class="fw-bold" style="color: var(--primary)">NURSE - MSTSC</h3>
-            <p class="text-muted small">ระบบห้องพยาบาล (Firebase Realtime)</p>
+    <div id="loginArea" class="container mt-5">
+        <div class="card mx-auto p-4 text-center" style="max-width:380px;">
+            <img src="https://i.postimg.cc/yxjxZmRN/Logo-mstsc-(1)-(1).png" width="80" class="mx-auto mb-3">
+            <h5 class="fw-bold mb-2">Staff Login</h5>
+            <p class="text-muted small mb-4">เฉพาะเจ้าหน้าที่งานพยาบาลเท่านั้น</p>
+            
+            <button onclick="window.loginGoogle()" class="btn btn-google w-100 rounded-pill shadow-sm">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20">
+                เข้าสู่ระบบด้วย Google
+            </button>
         </div>
-        <div class="mb-4"><input type="tel" id="sid" class="form-control text-center fs-3 fw-bold" maxlength="5" placeholder="กรอกรหัสนักเรียน 5 หลัก"></div>
-        <button onclick="checkStudent()" class="btn btn-purple shadow">ตรวจสอบข้อมูล <i class="fas fa-search ms-2"></i></button>
-        <div class="mt-4"><a href="?page=history" class="text-decoration-none text-muted small"><i class="fas fa-history me-1"></i> ดูประวัติการรักษา</a></div>
+    </div>
+
+    <div id="mainArea" style="display:none;">
+        <nav class="navbar navbar-dark fixed-top p-2">
+            <div class="container d-flex justify-content-between">
+                <span class="navbar-brand fw-bold"><img src="https://i.postimg.cc/yxjxZmRN/Logo-mstsc-(1)-(1).png" width="30"> NURSE ADMIN</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-white small d-none d-md-block" id="userEmail"></span>
+                    <button class="btn btn-outline-light btn-sm rounded-pill" onclick="window.logout()">ออกจากระบบ</button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container mt-5 pt-4">
+            <ul class="nav nav-tabs mb-4 border-0" id="myTab" role="tablist">
+                <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#dash">แดชบอร์ด</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#manage">จัดการนักเรียน</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#imp">Smart Import</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="dash">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="card p-3 mb-3"><h6 class="fw-bold text-primary">รายการรอรักษา (Real-time)</h6><div class="table-responsive"><table class="table align-middle"><tbody id="pendingList"></tbody></table></div></div>
+                            <div class="card p-3"><h6 class="fw-bold text-success">ประวัติวันนี้</h6><table class="table table-sm text-center"><thead class="table-light"><tr><th>ชื่อ</th><th>ห้อง</th><th>อาการ</th><th>ยา</th><th>แก้ไข</th></tr></thead><tbody id="todayList"></tbody></table></div>
+                        </div>
+                        <div class="col-md-4"><div class="card p-3 mb-3"><canvas id="statChart"></canvas></div></div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="manage">
+                    <div class="card p-3"><input type="text" id="srch" class="form-control mb-3" placeholder="ค้นหา..." onkeyup="filterStd()"><div class="table-responsive" style="max-height:500px;"><table class="table table-hover table-sm"><thead><tr><th>รหัส</th><th>ชื่อ</th><th>ห้อง</th><th>จัดการ</th></tr></thead><tbody id="allTable"></tbody></table></div></div>
+                </div>
+                <div class="tab-pane fade" id="imp">
+                    <div class="card p-5 text-center"><h5 class="fw-bold">Smart Import</h5><p class="text-muted">วางข้อมูล: รหัส ชื่อ นามสกุล (บรรทัดละคน)</p><textarea id="rawInput" class="form-control mb-3" rows="10"></textarea><button class="btn btn-primary" onclick="processImport()">นำเข้าข้อมูล</button></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, doc, getDoc, setDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc, setDoc, getDoc, orderBy, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // --- Config ของคุณ (ใส่ให้แล้ว) ---
+        // --- Config ---
         const firebaseConfig = {
             apiKey: "AIzaSyBY2n_f64ayN0Rlsq2x6-HT4NxmcePVCKA",
             authDomain: "nurse-mstsc.firebaseapp.com",
@@ -46,84 +87,155 @@
         };
 
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
 
-        window.checkStudent = async () => {
-            const sid = document.getElementById('sid').value;
-            if(!sid) return Swal.fire('แจ้งเตือน','กรุณากรอกรหัสนักเรียน','warning');
-            
-            Swal.fire({ title: 'กำลังตรวจสอบ...', didOpen: () => Swal.showLoading() });
-            
-            try {
-                const docRef = doc(db, "students", sid);
-                const docSnap = await getDoc(docRef);
-                Swal.close();
+        // ⚠️ รายชื่ออีเมลที่อนุญาตให้เป็นแอดมิน (แก้ตรงนี้!)
+        const allowedAdmins = [
+            "nurse@mst.ac.th", 
+            "your.email@gmail.com" // ใส่อีเมลของคุณเองเพิ่มตรงนี้
+        ];
 
-                if (docSnap.exists()) {
-                    confirmVisit(sid, docSnap.data());
+        // --- Auth Logic ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // เช็คว่าอีเมลอยู่ในรายการที่อนุญาตไหม
+                if (allowedAdmins.includes(user.email)) {
+                    document.getElementById('loginArea').style.display = 'none';
+                    document.getElementById('mainArea').style.display = 'block';
+                    document.getElementById('userEmail').innerText = user.email;
+                    startRealtimeListeners();
                 } else {
-                    registerForm(sid);
+                    Swal.fire('ปฏิเสธการเข้าถึง', 'อีเมลนี้ไม่มีสิทธิ์ใช้งานระบบ', 'error')
+                    .then(() => window.logout());
                 }
-            } catch(e) {
-                Swal.fire('Error', 'เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + e.message, 'error');
+            } else {
+                document.getElementById('loginArea').style.display = 'block';
+                document.getElementById('mainArea').style.display = 'none';
             }
+        });
+
+        window.loginGoogle = () => {
+            signInWithPopup(auth, provider).catch((error) => {
+                Swal.fire('Login Failed', error.message, 'error');
+            });
         };
 
-        window.registerForm = (sid) => {
-            let rooms = ''; for(let i=1; i<=10; i++) rooms += `<option value="${i}">ห้อง ${i}</option>`;
-            let dOpt = '<option value="">วัน</option>'; for(let i=1; i<=31; i++) dOpt += `<option value="${i}">${i}</option>`;
-            let mOpt = '<option value="">เดือน</option>'; ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."].forEach((m,i)=> mOpt+=`<option value="${i+1}">${m}</option>`);
-            let yOpt = '<option value="">ปี พ.ศ.</option>'; let cy = new Date().getFullYear()+543; for(let i=cy-10; i>=cy-20; i--) yOpt += `<option value="${i}">${i}</option>`;
+        window.logout = () => {
+            signOut(auth).then(() => location.reload());
+        };
+
+        // --- App Logic (เหมือนเดิม) ---
+        const categories = ["ปวดหัว/ไข้", "ปวดท้อง", "ทำแผล", "ปวดประจำเดือน", "พักผ่อน", "อื่นๆ"];
+        const medicines = ["พาราเซตามอล", "ยาธาตุน้ำขาว", "ยาแก้แพ้", "เบตาดีน", "พลาสเตอร์", "ยาหอม", "เกลือแร่"];
+        let allStudents = [];
+
+        function startRealtimeListeners() {
+            const qPending = query(collection(db, "visits"), where("status", "==", "Pending"), orderBy("timestamp", "asc"));
+            onSnapshot(qPending, (snapshot) => {
+                const html = snapshot.empty ? '<tr><td class="text-center text-muted">ไม่มีเคสใหม่</td></tr>' : 
+                snapshot.docs.map(d => {
+                    const data = d.data();
+                    return `<tr><td><b>${data.studentName}</b> (${data.room})</td><td class="text-end"><button class="btn btn-primary btn-sm" onclick="window.treat('${d.id}', '${data.studentId}')">รักษา</button></td></tr>`;
+                }).join('');
+                document.getElementById('pendingList').innerHTML = html;
+            });
+
+            const today = new Date(); today.setHours(0,0,0,0);
+            const qToday = query(collection(db, "visits"), where("status", "==", "Completed"), where("timestamp", ">=", today), orderBy("timestamp", "desc"));
+            onSnapshot(qToday, (snapshot) => {
+                const html = snapshot.docs.map(d => {
+                    const data = d.data();
+                    return `<tr><td>${data.studentName}</td><td>${data.room}</td><td><span class="badge bg-purple">${data.category}</span></td><td>${data.medicine}</td><td><button class="btn btn-sm btn-outline-secondary" onclick="window.treat('${d.id}', '${data.studentId}', true)"><i class="fas fa-edit"></i></button></td></tr>`;
+                }).join('');
+                document.getElementById('todayList').innerHTML = html;
+                updateStats(snapshot.docs);
+            });
+
+            onSnapshot(collection(db, "students"), (snap) => {
+                allStudents = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                renderStudents(allStudents);
+            });
+        }
+
+        window.treat = async (visitId, studentId, isEdit = false) => {
+            Swal.fire({didOpen:()=>Swal.showLoading()});
+            const sSnap = await getDoc(doc(db, "students", studentId));
+            const s = sSnap.data();
+            Swal.close();
+            
+            const catOpts = categories.map(c=>`<option>${c}</option>`).join('');
+            const medChecks = medicines.map(m=>`<div class="form-check"><input class="form-check-input mc" type="checkbox" value="${m}"><label class="form-check-label small">${m}</label></div>`).join('');
 
             Swal.fire({
-                title: 'ลงทะเบียนใหม่', width: '600px',
-                html: `<div class="text-start p-1 small" style="font-family:'Prompt'">
-                    <div class="row g-2 mb-2">
-                        <div class="col-4"><label>คำนำหน้า</label><select id="f1" class="form-select"><option>นาย</option><option>นางสาว</option><option>ด.ช.</option><option>ด.ญ.</option></select></div>
-                        <div class="col-4"><label>ชื่อ</label><input id="f2" class="form-control"></div>
-                        <div class="col-4"><label>สกุล</label><input id="f3" class="form-control"></div>
+                title: isEdit?'แก้ไข':'รักษา', width: '800px',
+                html: `<div class="row text-start small">
+                    <div class="col-6 border-end">
+                        <h6 class="text-primary">ข้อมูลนักเรียน</h6>
+                        <div class="row g-2 mb-2"><div class="col-6"><label>แพ้ยา</label><input id="e_al" class="form-control form-control-sm bg-danger-subtle fw-bold" value="${s.allergy}"></div><div class="col-6"><label>เบอร์</label><input id="e_ph" class="form-control form-control-sm" value="${s.phone}"></div><div class="col-12"><label>วันเกิด</label><input id="e_dob" class="form-control form-control-sm" value="${s.dob}"></div></div>
                     </div>
-                    <div class="row g-2 mb-2">
-                        <div class="col-6"><label>ห้อง</label><select id="f7" class="form-select">${rooms}</select></div>
-                        <div class="col-6"><label>เบอร์โทร</label><input id="f4" class="form-control"></div>
+                    <div class="col-6">
+                        <h6 class="text-warning">การรักษา</h6>
+                        <label>อาการ</label><select id="s_cat" class="form-select mb-2">${catOpts}</select>
+                        <label>ยา</label><div class="med-container">${medChecks}</div>
                     </div>
-                    <label>วันเกิด</label><div class="input-group mb-2"><select id="bd_d" class="form-select">${dOpt}</select><select id="bd_m" class="form-select">${mOpt}</select><select id="bd_y" class="form-select">${yOpt}</select></div>
-                    <div class="row g-2 mb-2">
-                         <div class="col-8"><label class="text-danger fw-bold">แพ้ยา/อาหาร</label><input id="f6" class="form-control" value="-"></div>
-                         <div class="col-4"><label>เลือด</label><select id="f5" class="form-select"><option>A</option><option>B</option><option>O</option><option>AB</option></select></div>
-                    </div>
-                    <div class="p-2 rounded bg-warning-subtle border border-warning"><label>ผู้ปกครอง</label><input id="f8" class="form-control mb-1"><label>เบอร์ผู้ปกครอง</label><input id="f9" class="form-control"></div>
                 </div>`,
-                confirmButtonText: 'บันทึก', confirmButtonColor: '#6A1B9A',
                 preConfirm: () => {
-                    const dob = `${document.getElementById('bd_d').value}/${document.getElementById('bd_m').value}/${document.getElementById('bd_y').value}`;
+                    const meds = Array.from(document.querySelectorAll('.mc:checked')).map(e=>e.value).join(', ');
                     return {
-                        id: sid, prefix: document.getElementById('f1').value, fname: document.getElementById('f2').value, lname: document.getElementById('f3').value, phone: document.getElementById('f4').value, blood: document.getElementById('f5').value, allergy: document.getElementById('f6').value, room: document.getElementById('f7').value, parent: document.getElementById('f8').value, parentPhone: document.getElementById('f9').value, dob: dob
+                        sUpdate: { allergy: document.getElementById('e_al').value, phone: document.getElementById('e_ph').value, dob: document.getElementById('e_dob').value },
+                        vUpdate: { category: document.getElementById('s_cat').value, medicine: meds, status: 'Completed' }
                     }
                 }
             }).then(async (r) => {
                 if(r.isConfirmed) {
-                    Swal.fire({didOpen:()=>Swal.showLoading()});
-                    await setDoc(doc(db, "students", sid), r.value);
-                    window.checkStudent();
+                    await updateDoc(doc(db, "students", studentId), r.value.sUpdate);
+                    await updateDoc(doc(db, "visits", visitId), r.value.vUpdate);
+                    Swal.fire('บันทึกแล้ว','','success');
                 }
             });
         };
 
-        window.confirmVisit = (sid, data) => {
-            Swal.fire({
-                title: 'ยืนยัน',
-                html: `<div class="p-3 border rounded text-start bg-light"><h5 class="text-primary fw-bold mb-1">${data.prefix}${data.fname} ${data.lname}</h5><p class="mb-0 small">ห้อง: ${data.room} | แพ้: <b class="text-danger">${data.allergy}</b></p></div>`,
-                showCancelButton: true, confirmButtonText: 'ยืนยัน', confirmButtonColor: '#6A1B9A'
-            }).then(async (r) => {
-                if(r.isConfirmed) {
-                    await addDoc(collection(db, "visits"), {
-                        studentId: sid, studentName: `${data.prefix}${data.fname} ${data.lname}`, room: data.room, timestamp: serverTimestamp(), status: "Pending", category: "", detail: "", medicine: ""
-                    });
-                    Swal.fire('สำเร็จ', 'ส่งข้อมูลเรียบร้อย', 'success');
-                    document.getElementById('sid').value = '';
+        function updateStats(docs) {
+            const counts = {};
+            docs.forEach(d => { const c = d.data().category; counts[c] = (counts[c]||0)+1; });
+            const ctx = document.getElementById('statChart');
+            if(window.myChart) window.myChart.destroy();
+            window.myChart = new Chart(ctx, { type: 'bar', data: { labels: Object.keys(counts), datasets: [{ label: 'เคส', data: Object.values(counts), backgroundColor: '#6A1B9A' }] } });
+        }
+
+        function renderStudents(list) {
+            document.getElementById('allTable').innerHTML = list.slice(0, 50).map(s => `<tr><td>${s.id}</td><td>${s.fname} ${s.lname}</td><td>${s.room}</td><td><button onclick="window.delStd('${s.id}')" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+        }
+        
+        window.filterStd = () => {
+            const k = document.getElementById('srch').value;
+            renderStudents(allStudents.filter(s => s.id.includes(k) || s.fname.includes(k)));
+        };
+
+        window.delStd = async (id) => {
+            if((await Swal.fire({title:'ลบ?',showCancelButton:true})).isConfirmed) {
+                await deleteDoc(doc(db, "students", id));
+            }
+        };
+
+        window.processImport = async () => {
+            const lines = document.getElementById('rawInput').value.split('\n');
+            const batch = writeBatch(db);
+            let count = 0;
+            lines.forEach(l => {
+                const m = l.match(/\b\d{5}\b/);
+                if(m) {
+                    const id = m[0];
+                    const nameParts = l.replace(id, '').trim().split(/\s+/);
+                    const ref = doc(db, "students", id);
+                    batch.set(ref, { id, prefix:'-', fname: nameParts[0]||'-', lname: nameParts[1]||'-', room:'-', allergy:'-', phone:'-', dob:'-', blood:'-', parent:'-', parentPhone:'-' });
+                    count++;
                 }
             });
+            await batch.commit();
+            Swal.fire('นำเข้าสำเร็จ', `${count} คน`, 'success');
         };
     </script>
 </body>
