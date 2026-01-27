@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>Nurse MSTSC</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #6A1B9A; --secondary: #FFD600; --bg: #f3f0f7; }
+        body { font-family: 'Prompt', sans-serif; background: var(--bg); display: flex; align-items: center; min-height: 100vh; justify-content: center; }
+        .main-card { background: white; width: 100%; max-width: 500px; border-radius: 20px; box-shadow: 0 15px 40px rgba(106,27,154,0.15); padding: 40px 30px; position: relative; margin-top: 50px; }
+        .logo-badge { width: 100px; height: 100px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; top: -50px; left: 50%; transform: translateX(-50%); border: 4px solid var(--secondary); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+        .btn-purple { background: var(--primary); color: white; border-radius: 12px; font-weight: 600; padding: 12px; border: none; width: 100%; transition: 0.3s; }
+        .btn-admin { position: fixed; top: 20px; right: 20px; background: white; color: var(--primary); border: 2px solid var(--primary); border-radius: 30px; padding: 8px 18px; text-decoration: none; font-weight: 600; font-size: 0.85rem; z-index: 1000; }
+        .form-control, .form-select { border-radius: 12px; }
+    </style>
+</head>
+<body>
+    <a href="?page=admin" class="btn-admin"><i class="fas fa-user-shield me-1"></i> สำหรับเจ้าหน้าที่</a>
+    
+    <div class="main-card text-center">
+        <div class="logo-badge"><img src="https://i.postimg.cc/yxjxZmRN/Logo-mstsc-(1)-(1).png" width="100%"></div>
+        <div class="pt-4 mb-4">
+            <h3 class="fw-bold" style="color: var(--primary)">NURSE - MSTSC</h3>
+            <p class="text-muted small">ระบบห้องพยาบาล (Firebase Realtime)</p>
+        </div>
+        <div class="mb-4"><input type="tel" id="sid" class="form-control text-center fs-3 fw-bold" maxlength="5" placeholder="กรอกรหัสนักเรียน 5 หลัก"></div>
+        <button onclick="checkStudent()" class="btn btn-purple shadow">ตรวจสอบข้อมูล <i class="fas fa-search ms-2"></i></button>
+        <div class="mt-4"><a href="?page=history" class="text-decoration-none text-muted small"><i class="fas fa-history me-1"></i> ดูประวัติการรักษา</a></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, doc, getDoc, setDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // --- Config ของคุณ (ใส่ให้แล้ว) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBY2n_f64ayN0Rlsq2x6-HT4NxmcePVCKA",
+            authDomain: "nurse-mstsc.firebaseapp.com",
+            projectId: "nurse-mstsc",
+            storageBucket: "nurse-mstsc.firebasestorage.app",
+            messagingSenderId: "144915684733",
+            appId: "1:144915684733:web:159a506c369c02410a4014"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.checkStudent = async () => {
+            const sid = document.getElementById('sid').value;
+            if(!sid) return Swal.fire('แจ้งเตือน','กรุณากรอกรหัสนักเรียน','warning');
+            
+            Swal.fire({ title: 'กำลังตรวจสอบ...', didOpen: () => Swal.showLoading() });
+            
+            try {
+                const docRef = doc(db, "students", sid);
+                const docSnap = await getDoc(docRef);
+                Swal.close();
+
+                if (docSnap.exists()) {
+                    confirmVisit(sid, docSnap.data());
+                } else {
+                    registerForm(sid);
+                }
+            } catch(e) {
+                Swal.fire('Error', 'เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + e.message, 'error');
+            }
+        };
+
+        window.registerForm = (sid) => {
+            let rooms = ''; for(let i=1; i<=10; i++) rooms += `<option value="${i}">ห้อง ${i}</option>`;
+            let dOpt = '<option value="">วัน</option>'; for(let i=1; i<=31; i++) dOpt += `<option value="${i}">${i}</option>`;
+            let mOpt = '<option value="">เดือน</option>'; ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."].forEach((m,i)=> mOpt+=`<option value="${i+1}">${m}</option>`);
+            let yOpt = '<option value="">ปี พ.ศ.</option>'; let cy = new Date().getFullYear()+543; for(let i=cy-10; i>=cy-20; i--) yOpt += `<option value="${i}">${i}</option>`;
+
+            Swal.fire({
+                title: 'ลงทะเบียนใหม่', width: '600px',
+                html: `<div class="text-start p-1 small" style="font-family:'Prompt'">
+                    <div class="row g-2 mb-2">
+                        <div class="col-4"><label>คำนำหน้า</label><select id="f1" class="form-select"><option>นาย</option><option>นางสาว</option><option>ด.ช.</option><option>ด.ญ.</option></select></div>
+                        <div class="col-4"><label>ชื่อ</label><input id="f2" class="form-control"></div>
+                        <div class="col-4"><label>สกุล</label><input id="f3" class="form-control"></div>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6"><label>ห้อง</label><select id="f7" class="form-select">${rooms}</select></div>
+                        <div class="col-6"><label>เบอร์โทร</label><input id="f4" class="form-control"></div>
+                    </div>
+                    <label>วันเกิด</label><div class="input-group mb-2"><select id="bd_d" class="form-select">${dOpt}</select><select id="bd_m" class="form-select">${mOpt}</select><select id="bd_y" class="form-select">${yOpt}</select></div>
+                    <div class="row g-2 mb-2">
+                         <div class="col-8"><label class="text-danger fw-bold">แพ้ยา/อาหาร</label><input id="f6" class="form-control" value="-"></div>
+                         <div class="col-4"><label>เลือด</label><select id="f5" class="form-select"><option>A</option><option>B</option><option>O</option><option>AB</option></select></div>
+                    </div>
+                    <div class="p-2 rounded bg-warning-subtle border border-warning"><label>ผู้ปกครอง</label><input id="f8" class="form-control mb-1"><label>เบอร์ผู้ปกครอง</label><input id="f9" class="form-control"></div>
+                </div>`,
+                confirmButtonText: 'บันทึก', confirmButtonColor: '#6A1B9A',
+                preConfirm: () => {
+                    const dob = `${document.getElementById('bd_d').value}/${document.getElementById('bd_m').value}/${document.getElementById('bd_y').value}`;
+                    return {
+                        id: sid, prefix: document.getElementById('f1').value, fname: document.getElementById('f2').value, lname: document.getElementById('f3').value, phone: document.getElementById('f4').value, blood: document.getElementById('f5').value, allergy: document.getElementById('f6').value, room: document.getElementById('f7').value, parent: document.getElementById('f8').value, parentPhone: document.getElementById('f9').value, dob: dob
+                    }
+                }
+            }).then(async (r) => {
+                if(r.isConfirmed) {
+                    Swal.fire({didOpen:()=>Swal.showLoading()});
+                    await setDoc(doc(db, "students", sid), r.value);
+                    window.checkStudent();
+                }
+            });
+        };
+
+        window.confirmVisit = (sid, data) => {
+            Swal.fire({
+                title: 'ยืนยัน',
+                html: `<div class="p-3 border rounded text-start bg-light"><h5 class="text-primary fw-bold mb-1">${data.prefix}${data.fname} ${data.lname}</h5><p class="mb-0 small">ห้อง: ${data.room} | แพ้: <b class="text-danger">${data.allergy}</b></p></div>`,
+                showCancelButton: true, confirmButtonText: 'ยืนยัน', confirmButtonColor: '#6A1B9A'
+            }).then(async (r) => {
+                if(r.isConfirmed) {
+                    await addDoc(collection(db, "visits"), {
+                        studentId: sid, studentName: `${data.prefix}${data.fname} ${data.lname}`, room: data.room, timestamp: serverTimestamp(), status: "Pending", category: "", detail: "", medicine: ""
+                    });
+                    Swal.fire('สำเร็จ', 'ส่งข้อมูลเรียบร้อย', 'success');
+                    document.getElementById('sid').value = '';
+                }
+            });
+        };
+    </script>
+</body>
+</html>
