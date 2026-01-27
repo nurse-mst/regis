@@ -20,7 +20,7 @@
         
         /* Cards & Tabs */
         .card { border-radius: 16px; border: none; box-shadow: 0 8px 24px rgba(106, 27, 154, 0.08); transition: transform 0.2s; }
-        .nav-link { color: #666; font-weight: 500; border-radius: 30px !important; padding: 10px 20px; transition: 0.3s; }
+        .nav-link { color: #666; font-weight: 500; border-radius: 30px !important; padding: 10px 20px; transition: 0.3s; cursor: pointer; }
         .nav-link.active { background-color: var(--primary) !important; color: white !important; box-shadow: 0 4px 10px rgba(106, 27, 154, 0.3); }
         .nav-link:hover:not(.active) { background-color: #e1bee7; color: var(--primary); }
         
@@ -28,10 +28,6 @@
         .med-container { max-height: 150px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 12px; padding: 12px; background: #fff; }
         .btn-google { background: white; color: #444; border: 1px solid #ddd; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; border-radius: 30px; transition: 0.3s; }
         .btn-google:hover { background: #f8f9fa; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        
-        /* Status Badges */
-        .badge-pending { background-color: #ff9800; color: white; }
-        .badge-completed { background-color: #4caf50; color: white; }
         
         /* Responsive Tweaks */
         @media (max-width: 768px) { .nav-link { font-size: 0.9rem; padding: 8px 12px; } }
@@ -42,14 +38,14 @@
     <div id="loginArea" class="container min-vh-100 d-flex align-items-center justify-content-center">
         <div class="card p-5 text-center" style="max-width:400px; width:100%;">
             <img src="https://i.postimg.cc/yxjxZmRN/Logo-mstsc-(1)-(1).png" width="100" class="mx-auto mb-4 brand-icon">
-            <h4 class="fw-bold mb-2" style="color:var(--primary)">MSTSC Health Care 🏥</h4>
+            <h4 class="fw-bold mb-2" style="color:var(--primary)">MSTSC Health Care <i class="fas fa-hospital-alt"></i></h4>
             <p class="text-muted small mb-4">ระบบบริหารจัดการห้องพยาบาล<br>โรงเรียนเมืองสุราษฎร์ธานี</p>
             <button onclick="window.loginGoogle()" class="btn btn-google w-100 mb-3">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="24">
                 เข้าสู่ระบบด้วย Google
             </button>
             <div class="alert alert-info small border-0 bg-info-subtle text-info-emphasis">
-                <i class="fas fa-info-circle me-1"></i> เฉพาะเจ้าหน้าที่ที่ได้รับอนุญาต
+                <i class="fas fa-lock me-1"></i> เฉพาะเจ้าหน้าที่ที่ได้รับอนุญาต
             </div>
         </div>
     </div>
@@ -59,10 +55,10 @@
             <div class="container-fluid">
                 <span class="navbar-brand fw-bold d-flex align-items-center gap-2">
                     <img src="https://i.postimg.cc/yxjxZmRN/Logo-mstsc-(1)-(1).png" width="35" class="bg-white rounded-circle p-1">
-                    <span>NURSE ADMIN <small class="opacity-75 fw-light" style="font-size:0.7em;">v2.0 (Firebase)</small></span>
+                    <span>NURSE ADMIN <small class="opacity-75 fw-light" style="font-size:0.7em;">v2.2</small></span>
                 </span>
                 <div class="d-flex align-items-center gap-3">
-                    <span class="text-white small d-none d-md-block bg-white bg-opacity-10 px-3 py-1 rounded-pill" id="userEmail"><i class="fas fa-user-circle me-1"></i> Loading...</span>
+                    <span class="text-white small d-none d-md-block bg-white bg-opacity-10 px-3 py-1 rounded-pill" id="userEmail"><i class="fas fa-spinner fa-spin me-2"></i> Loading...</span>
                     <button class="btn btn-warning btn-sm rounded-circle shadow-sm" onclick="window.location.reload()" title="รีเฟรช"><i class="fas fa-sync-alt"></i></button>
                     <button class="btn btn-light btn-sm rounded-pill px-3 fw-bold text-danger" onclick="window.logout()"><i class="fas fa-sign-out-alt me-1"></i> ออก</button>
                 </div>
@@ -164,7 +160,7 @@
                                     <div class="mb-4">
                                         <span class="display-4 text-primary"><i class="fas fa-file-import"></i></span>
                                     </div>
-                                    <h4 class="fw-bold mb-3">Smart Import 🚀</h4>
+                                    <h4 class="fw-bold mb-3">Smart Import <i class="fas fa-rocket text-warning"></i></h4>
                                     <p class="text-muted mb-4">นำเข้าข้อมูลนักเรียนจำนวนมากได้ง่ายๆ เพียงก๊อปปี้จาก Excel/Sheets มาวาง<br>(รองรับรูปแบบ: <code>รหัส ชื่อ นามสกุล</code> หรือ <code>รหัส คำนำหน้า ชื่อ นามสกุล</code>)</p>
                                     
                                     <div class="form-floating mb-3">
@@ -191,7 +187,7 @@
 
         // --- ⚠️⚠️⚠️ ใส่ Firebase Config ตรงนี้ ⚠️⚠️⚠️ ---
         const firebaseConfig = {
-            apiKey: "AIzaSyBY2n_f64ayN0Rlsq2x6-HT4NxmcePVCKA", // ใส่ API Key เดิมของคุณ
+            apiKey: "AIzaSyBY2n_f64ayN0Rlsq2x6-HT4NxmcePVCKA", 
             authDomain: "nurse-mstsc.firebaseapp.com",
             projectId: "nurse-mstsc",
             storageBucket: "nurse-mstsc.firebasestorage.app",
@@ -204,24 +200,17 @@
         const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
 
-        // ⚠️ ADMIN EMAILS (สำคัญ: ใส่อีเมลครูพยาบาลที่นี่)
-        const allowedAdmins = ["nurse@mst.ac.th", "your.email@gmail.com"]; 
-
-        // Global Variables
         let defaultCats = ["ปวดหัว/ไข้", "ปวดท้อง", "ทำแผล", "ปวดประจำเดือน", "พักผ่อน", "อุบัติเหตุ", "อื่นๆ"];
         let defaultMeds = ["พาราเซตามอล", "ยาธาตุน้ำขาว", "ยาแก้แพ้", "เบตาดีน", "พลาสเตอร์", "ยาหอม", "เกลือแร่", "ยาแดง"];
         let allStudents = [];
 
-        // --- Auth & Setup (แก้ไขจุดที่บัค) ---
+        // --- Auth & View Logic ---
         onAuthStateChanged(auth, (user) => {
             const loginBox = document.getElementById('loginArea');
             const mainBox = document.getElementById('mainArea');
 
             if (user) {
-                // (ใน Production ควรเปิด comment นี้เพื่อล็อกสิทธิ์)
-                // if (!allowedAdmins.includes(user.email)) { Swal.fire('Access Denied','คุณไม่มีสิทธิ์เข้าถึง','error').then(()=>window.logout()); return; }
-                
-                // *** แก้ไข: เอาคลาส d-flex ออก เพื่อให้ style.display='none' ทำงานได้ ***
+                // Remove d-flex class to allow hiding
                 loginBox.classList.remove('d-flex');
                 loginBox.style.display = 'none';
                 
@@ -230,7 +219,7 @@
                 
                 initSystem();
             } else {
-                // *** แก้ไข: ใส่คลาส d-flex กลับมา เพื่อให้จัดกลางจอ ***
+                // Add d-flex class for centering
                 loginBox.classList.add('d-flex');
                 loginBox.style.display = 'flex';
                 
@@ -239,7 +228,6 @@
         });
 
         async function initSystem() {
-            // โหลด Config จาก Database
             const configSnap = await getDoc(doc(db, "settings", "global"));
             if (configSnap.exists()) {
                 const data = configSnap.data();
@@ -252,12 +240,11 @@
         window.loginGoogle = () => signInWithPopup(auth, provider).catch(e => Swal.fire('Login Error', e.message, 'error'));
         window.logout = () => signOut(auth).then(() => location.reload());
 
-        // --- Real-time Listeners ---
         function startRealtimeListeners() {
             // 1. Pending List
             const qPending = query(collection(db, "visits"), where("status", "==", "Pending"), orderBy("timestamp", "asc"));
             onSnapshot(qPending, (snap) => {
-                const html = snap.empty ? `<tr><td class="text-center text-muted py-4">✨ ไม่มีเคสรอรับบริการ ✨</td></tr>` : 
+                const html = snap.empty ? `<tr><td class="text-center text-muted py-4"><i class="fas fa-check-circle text-success me-2"></i>ไม่มีเคสรอรับบริการ</td></tr>` : 
                 snap.docs.map(d => {
                     const v = d.data();
                     const time = v.timestamp ? new Date(v.timestamp.seconds*1000).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}) : '';
@@ -274,11 +261,6 @@
                     </tr>`;
                 }).join('');
                 document.getElementById('pendingList').innerHTML = html;
-            }, (error) => {
-                console.error("Pending Error:", error);
-                if(error.message.includes("requires an index")) {
-                    Swal.fire({icon:'warning', title:'ต้องการ Index', html:`ระบบต้องการ Index เพื่อเรียงลำดับ <a href="${error.message.match(/https:\/\/[^\s]+/)[0]}" target="_blank">คลิกที่นี่เพื่อสร้าง</a>`});
-                }
             });
 
             // 2. Today History
@@ -303,20 +285,18 @@
             // 3. Students List
             onSnapshot(collection(db, "students"), (snap) => {
                 allStudents = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                filterStd(); // Render initial list
+                filterStd(); 
             });
         }
 
-        // --- Core Functions: Treat & Edit ---
+        // --- Functions ---
         window.treat = async (visitId, studentId, isEdit = false) => {
-            Swal.fire({title:'⏳ กำลังโหลด...', didOpen:()=>Swal.showLoading()});
+            Swal.fire({title:'<i class="fas fa-spinner fa-spin"></i> กำลังโหลด...', didOpen:()=>Swal.showLoading()});
             
-            // Get Student & History Data
             const sSnap = await getDoc(doc(db, "students", studentId));
             const s = sSnap.exists() ? sSnap.data() : { allergy:'-', phone:'-', dob:'-', prefix:'', fname:'ไม่พบ', lname:'ข้อมูล' };
             
-            // Get Past History (Last 5)
-            const hQ = query(collection(db, "visits"), where("studentId", "==", studentId), where("status", "==", "Completed"), orderBy("timestamp", "desc"), ); // limit handled in JS for simplicity if index issue
+            const hQ = query(collection(db, "visits"), where("studentId", "==", studentId), where("status", "==", "Completed"), orderBy("timestamp", "desc"));
             const hSnap = await getDocs(hQ);
             let historyHtml = hSnap.docs.slice(0,5).map(d => {
                 const v = d.data();
@@ -333,7 +313,7 @@
             const medChecks = defaultMeds.map(m=>`<div class="form-check"><input class="form-check-input mc" type="checkbox" value="${m}" id="m_${m.replace(/\s/g,'')}"><label class="form-check-label small" for="m_${m.replace(/\s/g,'')}">${m}</label></div>`).join('');
 
             await Swal.fire({
-                title: isEdit ? '✏️ แก้ไขบันทึก' : '🩺 บันทึกการรักษา',
+                title: isEdit ? '<i class="fas fa-edit me-2"></i>แก้ไขบันทึก' : '<i class="fas fa-user-md me-2"></i>บันทึกการรักษา',
                 width: '900px',
                 html: `
                 <div class="row text-start">
@@ -350,7 +330,7 @@
                         <ul class="list-group list-group-flush" style="max-height:150px; overflow-y:auto;">${historyHtml}</ul>
                     </div>
                     <div class="col-lg-6 ps-lg-4">
-                        <h6 class="fw-bold text-warning mb-3"><i class="fas fa-notes-medical me-1"></i> รายละเอียดการรักษา</h6>
+                        <h6 class="fw-bold text-warning mb-3"><i class="fas fa-file-medical-alt me-1"></i> รายละเอียดการรักษา</h6>
                         <div class="mb-3">
                             <label class="small fw-bold">อาการหลัก</label>
                             <select id="s_cat" class="form-select">${catOpts}</select>
@@ -377,7 +357,7 @@
                             detail: document.getElementById('s_det').value,
                             medicine: Array.from(document.querySelectorAll('.mc:checked')).map(e=>e.value).join(', '), 
                             status: 'Completed',
-                            timestamp: isEdit ? undefined : new Date() // Keep original time if editing
+                            timestamp: isEdit ? undefined : new Date()
                         }
                     }
                 }
@@ -385,23 +365,18 @@
                 if(r.isConfirmed) {
                     const batch = writeBatch(db);
                     if(sSnap.exists()) batch.update(doc(db, "students", studentId), r.value.sUpdate);
-                    
-                    // If editing, merge. If new treat from pending, set status.
                     const vData = r.value.vUpdate;
-                    if(isEdit) delete vData.timestamp; // Don't allow changing time on edit
-                    
+                    if(isEdit) delete vData.timestamp;
                     batch.update(doc(db, "visits", visitId), vData);
                     await batch.commit();
-                    
                     Swal.fire({icon:'success', title:'บันทึกเรียบร้อย', timer:1500, showConfirmButton:false});
                 }
             });
         };
 
-        // --- Config Management (เพิ่มยา/อาการ) ---
         window.openConfig = async () => {
             const { value: formValues } = await Swal.fire({
-                title: '⚙️ ตั้งค่าระบบ',
+                title: '<i class="fas fa-cogs"></i> ตั้งค่าระบบ',
                 html: `
                 <div class="text-start">
                     <label class="small fw-bold mb-1">รายการอาการ (คั่นด้วย ,)</label>
@@ -428,9 +403,8 @@
             }
         };
 
-        // --- Export to CSV ---
         window.exportToCSV = async () => {
-            Swal.fire({title:'กำลังเตรียมไฟล์...', didOpen:()=>Swal.showLoading()});
+            Swal.fire({title:'<i class="fas fa-spinner fa-spin"></i> กำลังเตรียมไฟล์...', didOpen:()=>Swal.showLoading()});
             const q = query(collection(db, "visits"), orderBy("timestamp", "desc"));
             const snap = await getDocs(q);
             
@@ -450,11 +424,10 @@
             Swal.close();
         };
 
-        // --- Student Management & Insights ---
         window.filterStd = () => {
             const k = document.getElementById('srch').value;
             const list = allStudents.filter(s => s.id.includes(k) || (s.fname+' '+s.lname).includes(k));
-            renderStudents(list.slice(0, 100)); // Limit render for speed
+            renderStudents(list.slice(0, 100)); 
         };
 
         function renderStudents(list) {
@@ -474,10 +447,9 @@
         }
 
         window.viewStudent = async (sid) => {
-            Swal.fire({title:'Loading Profile...', didOpen:()=>Swal.showLoading()});
+            Swal.fire({title:'<i class="fas fa-spinner fa-spin"></i> Loading Profile...', didOpen:()=>Swal.showLoading()});
             const s = allStudents.find(x => x.id === sid);
             
-            // Load Full History
             const hQ = query(collection(db, "visits"), where("studentId", "==", sid), orderBy("timestamp", "desc"));
             const hSnap = await getDocs(hQ);
             const historyList = hSnap.docs.map(d => {
@@ -487,7 +459,7 @@
             }).join('');
 
             Swal.fire({
-                title: `ประวัตินักเรียน: ${s.fname} ${s.lname}`,
+                title: `<i class="fas fa-id-card"></i> ประวัตินักเรียน: ${s.fname} ${s.lname}`,
                 width: '800px',
                 html: `
                 <div class="row text-start">
@@ -519,7 +491,7 @@
         window.editStudent = (sid) => {
             const s = allStudents.find(x => x.id === sid);
             Swal.fire({
-                title: 'แก้ไขข้อมูลนักเรียน',
+                title: '<i class="fas fa-user-edit"></i> แก้ไขข้อมูลนักเรียน',
                 html: `
                 <div class="row g-2 text-start">
                     <div class="col-4"><label class="small">คำนำหน้า</label><input id="ed_pf" class="form-control form-control-sm" value="${s.prefix}"></div>
@@ -560,7 +532,6 @@
             }
         };
 
-        // --- Stats & Import ---
         function updateStats(docs) {
             const counts = {};
             docs.forEach(d => { const c = d.data().category || 'ไม่ระบุ'; counts[c] = (counts[c]||0)+1; });
