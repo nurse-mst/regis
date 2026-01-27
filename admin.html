@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <style>
         :root { --primary: #6A1B9A; --primary-hover: #4a148c; --secondary: #FFD600; --bg: #f8f9fa; }
@@ -17,25 +18,22 @@
         .navbar { background: linear-gradient(135deg, var(--primary), #8e24aa) !important; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .brand-icon { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
         
-        /* Cards */
+        /* Cards & Tabs */
         .card { border-radius: 16px; border: none; box-shadow: 0 8px 24px rgba(106, 27, 154, 0.08); transition: transform 0.2s; }
+        .nav-link { color: #666; font-weight: 500; border-radius: 30px !important; padding: 10px 20px; transition: 0.3s; }
+        .nav-link.active { background-color: var(--primary) !important; color: white !important; box-shadow: 0 4px 10px rgba(106, 27, 154, 0.3); }
+        .nav-link:hover:not(.active) { background-color: #e1bee7; color: var(--primary); }
         
-        /* Custom Tabs System (แก้ปัญหาหน้าไม่สลับ) */
-        .nav-link { color: #666; font-weight: 500; border-radius: 30px !important; padding: 10px 20px; transition: 0.3s; cursor: pointer; }
-        .nav-link.active-tab { background-color: var(--primary) !important; color: white !important; box-shadow: 0 4px 10px rgba(106, 27, 154, 0.3); }
-        .nav-link:hover:not(.active-tab) { background-color: #e1bee7; color: var(--primary); }
-        
-        /* บังคับซ่อนหน้าทั้งหมดก่อน */
-        .page-section { display: none; animation: fadeIn 0.3s; }
-        /* หน้าที่ถูกเลือกให้แสดง */
-        .page-section.active-section { display: block; }
-        
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
+        /* Custom Elements */
         .med-container { max-height: 150px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 12px; padding: 12px; background: #fff; }
         .btn-google { background: white; color: #444; border: 1px solid #ddd; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; border-radius: 30px; transition: 0.3s; }
         .btn-google:hover { background: #f8f9fa; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         
+        /* Status Badges */
+        .badge-pending { background-color: #ff9800; color: white; }
+        .badge-completed { background-color: #4caf50; color: white; }
+        
+        /* Responsive Tweaks */
         @media (max-width: 768px) { .nav-link { font-size: 0.9rem; padding: 8px 12px; } }
     </style>
 </head>
@@ -61,7 +59,7 @@
             <div class="container-fluid">
                 <span class="navbar-brand fw-bold d-flex align-items-center gap-2">
                     <img src="https://i.postimg.cc/yxjxZmRN/Logo-mstsc-(1)-(1).png" width="35" class="bg-white rounded-circle p-1">
-                    <span>NURSE ADMIN <small class="opacity-75 fw-light" style="font-size:0.7em;">v2.1 (Fixed Tabs)</small></span>
+                    <span>NURSE ADMIN <small class="opacity-75 fw-light" style="font-size:0.7em;">v2.0 (Firebase)</small></span>
                 </span>
                 <div class="d-flex align-items-center gap-3">
                     <span class="text-white small d-none d-md-block bg-white bg-opacity-10 px-3 py-1 rounded-pill" id="userEmail"><i class="fas fa-user-circle me-1"></i> Loading...</span>
@@ -72,26 +70,14 @@
         </nav>
 
         <div class="container py-4">
-            <ul class="nav nav-pills mb-4 justify-content-center justify-content-md-start gap-2">
-                <li class="nav-item">
-                    <a class="nav-link active-tab" onclick="switchTab('dash', this)">
-                        <i class="fas fa-chart-pie me-2"></i>แดชบอร์ด
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" onclick="switchTab('manage', this)">
-                        <i class="fas fa-users-cog me-2"></i>จัดการนักเรียน
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" onclick="switchTab('imp', this)">
-                        <i class="fas fa-file-import me-2"></i>Smart Import
-                    </a>
-                </li>
+            <ul class="nav nav-pills mb-4 justify-content-center justify-content-md-start gap-2" id="myTab" role="tablist">
+                <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#dash"><i class="fas fa-chart-pie me-2"></i>แดชบอร์ด</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#manage"><i class="fas fa-users-cog me-2"></i>จัดการนักเรียน</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#imp"><i class="fas fa-file-import me-2"></i>Smart Import</button></li>
             </ul>
 
-            <div id="content-area">
-                <div id="dash" class="page-section active-section">
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="dash">
                     <div class="row g-4">
                         <div class="col-lg-8">
                             <div class="card mb-4 border-start border-5 border-warning">
@@ -106,6 +92,7 @@
                                     </div>
                                 </div>
                             </div>
+
                             <div class="card border-start border-5 border-success">
                                 <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
                                     <h5 class="fw-bold text-success m-0"><i class="fas fa-clipboard-check me-2"></i>ประวัติวันนี้</h5>
@@ -124,6 +111,7 @@
                                 </div>
                             </div>
                         </div>
+
                         <div class="col-lg-4">
                             <div class="card h-100 border-start border-5 border-primary">
                                 <div class="card-body">
@@ -141,7 +129,7 @@
                     </div>
                 </div>
                 
-                <div id="manage" class="page-section">
+                <div class="tab-pane fade" id="manage">
                     <div class="card">
                         <div class="card-header bg-white py-3">
                             <div class="row align-items-center">
@@ -163,23 +151,27 @@
                             </div>
                         </div>
                         <div class="card-footer bg-white small text-muted">
-                            <i class="fas fa-info-circle me-1"></i> แสดงผลสูงสุด 100 รายการล่าสุด
+                            <i class="fas fa-info-circle me-1"></i> แสดงผลสูงสุด 100 รายการล่าสุด (ค้นหาเพื่อดูเพิ่มเติม)
                         </div>
                     </div>
                 </div>
                 
-                <div id="imp" class="page-section">
+                <div class="tab-pane fade" id="imp">
                     <div class="row justify-content-center">
                         <div class="col-md-8">
                             <div class="card border-0 shadow-lg">
                                 <div class="card-body p-5 text-center">
-                                    <div class="mb-4"><span class="display-4 text-primary"><i class="fas fa-file-import"></i></span></div>
+                                    <div class="mb-4">
+                                        <span class="display-4 text-primary"><i class="fas fa-file-import"></i></span>
+                                    </div>
                                     <h4 class="fw-bold mb-3">Smart Import 🚀</h4>
-                                    <p class="text-muted mb-4">วางข้อมูล: <code>รหัส ชื่อ นามสกุล</code> หรือ <code>รหัส คำนำหน้า ชื่อ นามสกุล</code></p>
+                                    <p class="text-muted mb-4">นำเข้าข้อมูลนักเรียนจำนวนมากได้ง่ายๆ เพียงก๊อปปี้จาก Excel/Sheets มาวาง<br>(รองรับรูปแบบ: <code>รหัส ชื่อ นามสกุล</code> หรือ <code>รหัส คำนำหน้า ชื่อ นามสกุล</code>)</p>
+                                    
                                     <div class="form-floating mb-3">
                                         <textarea id="rawInput" class="form-control" style="height: 200px" placeholder="วางข้อมูลที่นี่"></textarea>
                                         <label>วางข้อมูลที่นี่...</label>
                                     </div>
+                                    
                                     <button class="btn btn-primary btn-lg rounded-pill px-5 shadow" onclick="processImport()">
                                         <i class="fas fa-magic me-2"></i> ตรวจสอบและนำเข้า
                                     </button>
@@ -199,7 +191,7 @@
 
         // --- ⚠️⚠️⚠️ ใส่ Firebase Config ตรงนี้ ⚠️⚠️⚠️ ---
         const firebaseConfig = {
-            apiKey: "AIzaSyBY2n_f64ayN0Rlsq2x6-HT4NxmcePVCKA",
+            apiKey: "AIzaSyBY2n_f64ayN0Rlsq2x6-HT4NxmcePVCKA", // ใส่ API Key เดิมของคุณ
             authDomain: "nurse-mstsc.firebaseapp.com",
             projectId: "nurse-mstsc",
             storageBucket: "nurse-mstsc.firebasestorage.app",
@@ -212,39 +204,42 @@
         const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
 
+        // ⚠️ ADMIN EMAILS (สำคัญ: ใส่อีเมลครูพยาบาลที่นี่)
         const allowedAdmins = ["nurse@mst.ac.th", "your.email@gmail.com"]; 
 
+        // Global Variables
         let defaultCats = ["ปวดหัว/ไข้", "ปวดท้อง", "ทำแผล", "ปวดประจำเดือน", "พักผ่อน", "อุบัติเหตุ", "อื่นๆ"];
         let defaultMeds = ["พาราเซตามอล", "ยาธาตุน้ำขาว", "ยาแก้แพ้", "เบตาดีน", "พลาสเตอร์", "ยาหอม", "เกลือแร่", "ยาแดง"];
         let allStudents = [];
 
-        // --- Custom Tab Switcher (แก้ปัญหาหน้าไม่สลับ) ---
-        window.switchTab = (tabId, element) => {
-            // ซ่อนทุกหน้า
-            document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active-section'));
-            // เอาสีปุ่มออกทั้งหมด
-            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active-tab'));
-            
-            // โชว์หน้าเป้าหมาย
-            document.getElementById(tabId).classList.add('active-section');
-            // ใส่สีปุ่มที่กด
-            element.classList.add('active-tab');
-        };
-
-        // --- Auth & Setup ---
+        // --- Auth & Setup (แก้ไขจุดที่บัค) ---
         onAuthStateChanged(auth, (user) => {
+            const loginBox = document.getElementById('loginArea');
+            const mainBox = document.getElementById('mainArea');
+
             if (user) {
-                document.getElementById('loginArea').style.display = 'none';
-                document.getElementById('mainArea').style.display = 'block';
+                // (ใน Production ควรเปิด comment นี้เพื่อล็อกสิทธิ์)
+                // if (!allowedAdmins.includes(user.email)) { Swal.fire('Access Denied','คุณไม่มีสิทธิ์เข้าถึง','error').then(()=>window.logout()); return; }
+                
+                // *** แก้ไข: เอาคลาส d-flex ออก เพื่อให้ style.display='none' ทำงานได้ ***
+                loginBox.classList.remove('d-flex');
+                loginBox.style.display = 'none';
+                
+                mainBox.style.display = 'block';
                 document.getElementById('userEmail').innerHTML = `<i class="fas fa-user-circle me-2"></i>${user.email}`;
+                
                 initSystem();
             } else {
-                document.getElementById('loginArea').style.display = 'flex';
-                document.getElementById('mainArea').style.display = 'none';
+                // *** แก้ไข: ใส่คลาส d-flex กลับมา เพื่อให้จัดกลางจอ ***
+                loginBox.classList.add('d-flex');
+                loginBox.style.display = 'flex';
+                
+                mainBox.style.display = 'none';
             }
         });
 
         async function initSystem() {
+            // โหลด Config จาก Database
             const configSnap = await getDoc(doc(db, "settings", "global"));
             if (configSnap.exists()) {
                 const data = configSnap.data();
@@ -279,6 +274,11 @@
                     </tr>`;
                 }).join('');
                 document.getElementById('pendingList').innerHTML = html;
+            }, (error) => {
+                console.error("Pending Error:", error);
+                if(error.message.includes("requires an index")) {
+                    Swal.fire({icon:'warning', title:'ต้องการ Index', html:`ระบบต้องการ Index เพื่อเรียงลำดับ <a href="${error.message.match(/https:\/\/[^\s]+/)[0]}" target="_blank">คลิกที่นี่เพื่อสร้าง</a>`});
+                }
             });
 
             // 2. Today History
@@ -303,7 +303,7 @@
             // 3. Students List
             onSnapshot(collection(db, "students"), (snap) => {
                 allStudents = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                filterStd(); 
+                filterStd(); // Render initial list
             });
         }
 
@@ -311,10 +311,12 @@
         window.treat = async (visitId, studentId, isEdit = false) => {
             Swal.fire({title:'⏳ กำลังโหลด...', didOpen:()=>Swal.showLoading()});
             
+            // Get Student & History Data
             const sSnap = await getDoc(doc(db, "students", studentId));
             const s = sSnap.exists() ? sSnap.data() : { allergy:'-', phone:'-', dob:'-', prefix:'', fname:'ไม่พบ', lname:'ข้อมูล' };
             
-            const hQ = query(collection(db, "visits"), where("studentId", "==", studentId), where("status", "==", "Completed"), orderBy("timestamp", "desc"));
+            // Get Past History (Last 5)
+            const hQ = query(collection(db, "visits"), where("studentId", "==", studentId), where("status", "==", "Completed"), orderBy("timestamp", "desc"), ); // limit handled in JS for simplicity if index issue
             const hSnap = await getDocs(hQ);
             let historyHtml = hSnap.docs.slice(0,5).map(d => {
                 const v = d.data();
@@ -339,9 +341,9 @@
                         <div class="bg-light p-3 rounded mb-3">
                             <h6 class="fw-bold text-primary mb-2"><i class="fas fa-user-circle me-1"></i> ${s.prefix}${s.fname} ${s.lname}</h6>
                             <div class="row g-2 small">
-                                <div class="col-6"><label class="text-muted">แพ้ยา:</label> <input id="e_al" class="form-control form-control-sm text-danger fw-bold" value="${s.allergy||'-'}"></div>
-                                <div class="col-6"><label class="text-muted">เบอร์โทร:</label> <input id="e_ph" class="form-control form-control-sm" value="${s.phone||'-'}"></div>
-                                <div class="col-12"><label class="text-muted">วันเกิด:</label> <input id="e_dob" class="form-control form-control-sm" value="${s.dob||'-'}"></div>
+                                <div class="col-6"><label class="text-muted">แพ้ยา:</label> <input id="e_al" class="form-control form-control-sm text-danger fw-bold" value="${s.allergy}"></div>
+                                <div class="col-6"><label class="text-muted">เบอร์โทร:</label> <input id="e_ph" class="form-control form-control-sm" value="${s.phone}"></div>
+                                <div class="col-12"><label class="text-muted">วันเกิด:</label> <input id="e_dob" class="form-control form-control-sm" value="${s.dob}"></div>
                             </div>
                         </div>
                         <h6 class="text-secondary small fw-bold"><i class="fas fa-history me-1"></i> ประวัติย้อนหลัง 5 ครั้ง</h6>
@@ -375,7 +377,7 @@
                             detail: document.getElementById('s_det').value,
                             medicine: Array.from(document.querySelectorAll('.mc:checked')).map(e=>e.value).join(', '), 
                             status: 'Completed',
-                            timestamp: isEdit ? undefined : new Date()
+                            timestamp: isEdit ? undefined : new Date() // Keep original time if editing
                         }
                     }
                 }
@@ -383,16 +385,20 @@
                 if(r.isConfirmed) {
                     const batch = writeBatch(db);
                     if(sSnap.exists()) batch.update(doc(db, "students", studentId), r.value.sUpdate);
+                    
+                    // If editing, merge. If new treat from pending, set status.
                     const vData = r.value.vUpdate;
-                    if(isEdit) delete vData.timestamp;
+                    if(isEdit) delete vData.timestamp; // Don't allow changing time on edit
+                    
                     batch.update(doc(db, "visits", visitId), vData);
                     await batch.commit();
+                    
                     Swal.fire({icon:'success', title:'บันทึกเรียบร้อย', timer:1500, showConfirmButton:false});
                 }
             });
         };
 
-        // --- Config Management ---
+        // --- Config Management (เพิ่มยา/อาการ) ---
         window.openConfig = async () => {
             const { value: formValues } = await Swal.fire({
                 title: '⚙️ ตั้งค่าระบบ',
@@ -444,11 +450,11 @@
             Swal.close();
         };
 
-        // --- Student Management ---
+        // --- Student Management & Insights ---
         window.filterStd = () => {
             const k = document.getElementById('srch').value;
             const list = allStudents.filter(s => s.id.includes(k) || (s.fname+' '+s.lname).includes(k));
-            renderStudents(list.slice(0, 100));
+            renderStudents(list.slice(0, 100)); // Limit render for speed
         };
 
         function renderStudents(list) {
@@ -470,6 +476,8 @@
         window.viewStudent = async (sid) => {
             Swal.fire({title:'Loading Profile...', didOpen:()=>Swal.showLoading()});
             const s = allStudents.find(x => x.id === sid);
+            
+            // Load Full History
             const hQ = query(collection(db, "visits"), where("studentId", "==", sid), orderBy("timestamp", "desc"));
             const hSnap = await getDocs(hQ);
             const historyList = hSnap.docs.map(d => {
@@ -503,7 +511,8 @@
                             </table>
                         </div>
                     </div>
-                </div>`
+                </div>
+                `
             });
         };
 
@@ -551,6 +560,22 @@
             }
         };
 
+        // --- Stats & Import ---
+        function updateStats(docs) {
+            const counts = {};
+            docs.forEach(d => { const c = d.data().category || 'ไม่ระบุ'; counts[c] = (counts[c]||0)+1; });
+            const ctx = document.getElementById('statChart');
+            if(window.myChart) window.myChart.destroy();
+            window.myChart = new Chart(ctx, { 
+                type: 'doughnut', 
+                data: { 
+                    labels: Object.keys(counts), 
+                    datasets: [{ data: Object.values(counts), backgroundColor: ['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40'] }] 
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } } 
+            });
+        }
+
         window.processImport = async () => {
             const lines = document.getElementById('rawInput').value.split('\n');
             const batch = writeBatch(db);
@@ -573,14 +598,6 @@
                 Swal.fire('Error', 'ไม่พบข้อมูลที่ถูกต้อง', 'error');
             }
         };
-
-        function updateStats(docs) {
-            const counts = {};
-            docs.forEach(d => { const c = d.data().category || 'ไม่ระบุ'; counts[c] = (counts[c]||0)+1; });
-            const ctx = document.getElementById('statChart');
-            if(window.myChart) window.myChart.destroy();
-            window.myChart = new Chart(ctx, { type: 'doughnut', data: { labels: Object.keys(counts), datasets: [{ data: Object.values(counts), backgroundColor: ['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40'] }] }, options: { responsive: true, plugins: { legend: { position: 'bottom' } } } });
-        }
     </script>
 </body>
 </html>
