@@ -255,20 +255,16 @@
             const loginBox = document.getElementById('loginArea');
             const mainBox = document.getElementById('mainArea');
             if (user) {
-                // *** FIX: Remove d-flex class to ensure display:none works ***
                 loginBox.classList.remove('d-flex'); 
                 loginBox.style.display = 'none';
-                
                 mainBox.style.display = 'block';
                 document.getElementById('userEmail').innerHTML = `<i class="fas fa-user-circle me-2"></i>${user.email}`;
                 const now = new Date();
                 document.getElementById('statMonthPicker').value = now.toISOString().slice(0, 7);
                 initSystem();
             } else {
-                // *** FIX: Add d-flex back when showing login ***
                 loginBox.classList.add('d-flex');
                 loginBox.style.display = 'flex';
-                
                 mainBox.style.display = 'none';
             }
         });
@@ -340,7 +336,7 @@
             });
         }
 
-        window.loadMonthlyStats = async () => { /* Stats Logic */ 
+        window.loadMonthlyStats = async () => {
             const picker = document.getElementById('statMonthPicker').value; if(!picker) return;
             const [year, month] = picker.split('-').map(Number);
             const startDate = new Date(year, month - 1, 1);
@@ -434,6 +430,14 @@
                             <input type="text" id="medSearch" class="form-control form-control-sm w-50" placeholder="🔍 ค้นหาชื่อยา..." onkeyup="filterMeds()">
                         </div>
                         <div class="med-container" id="medBox">${medChecks}</div>
+                        
+                        ${isEdit ? `
+                        <div class="mt-4 pt-3 border-top d-flex justify-content-start">
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="window.innerDeleteVisit('${visitId}')">
+                                <i class="fas fa-trash-alt me-1"></i> ลบรายการประวัตินี้
+                            </button>
+                        </div>
+                        ` : ''}
                     </div>
                 </div>`,
                 showCancelButton: true, confirmButtonText: '<i class="fas fa-save me-1"></i> บันทึกข้อมูล', confirmButtonColor: '#6A1B9A',
@@ -485,7 +489,30 @@
             });
         };
 
-        window.openConfig = async () => { /* Code เดิม */ 
+        window.innerDeleteVisit = async (visitId) => {
+            const confirm = await Swal.fire({
+                title: 'ยืนยันการลบ?',
+                text: "คุณต้องการลบประวัติการรักษารายการนี้ใช่หรือไม่?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'ใช่, ลบรายการ',
+                cancelButtonText: 'ยกเลิก'
+            });
+
+            if (confirm.isConfirmed) {
+                try {
+                    await deleteDoc(doc(db, "visits", visitId));
+                    Swal.fire({ icon: 'success', title: 'ลบข้อมูลเรียบร้อย', timer: 1500, showConfirmButton: false });
+                    window.loadMonthlyStats(); 
+                } catch (e) {
+                    Swal.fire('Error', e.message, 'error');
+                }
+            }
+        };
+
+        window.openConfig = async () => {
              const { value: formValues } = await Swal.fire({
                 title: '<i class="fas fa-cogs"></i> ตั้งค่าระบบ',
                 html: `<div class="text-start"><label class="small fw-bold mb-1">รายการอาการ (คั่นด้วย ,)</label><textarea id="cfg_cats" class="form-control mb-3" rows="3">${defaultCats.join(', ')}</textarea><label class="small fw-bold mb-1">รายการยา (คั่นด้วย ,)</label><textarea id="cfg_meds" class="form-control" rows="3">${defaultMeds.join(', ')}</textarea></div>`,
@@ -495,7 +522,6 @@
             if (formValues) { await setDoc(doc(db, "settings", "global"), formValues); defaultCats = formValues.categories; defaultMeds = formValues.medicines; Swal.fire('Updated', 'อัปเดตตัวเลือกเรียบร้อยแล้ว', 'success'); }
         };
 
-        // --- NEW: Export Logic ---
         window.exportReport = async (mode) => {
             let start, end, filename;
             const now = new Date();
@@ -511,10 +537,9 @@
                 filename = `Report_Monthly_${now.getMonth()+1}-${now.getFullYear()+543}`;
             }
             else if (mode === 'year') {
-                // ปีการศึกษา (พฤษภาคม - เมษายนปีหน้า)
                 const y = now.getMonth() < 4 ? now.getFullYear() - 1 : now.getFullYear();
-                start = new Date(y, 4, 1); // 1 พ.ค.
-                end = new Date(y + 1, 3, 30, 23, 59, 59); // 30 เม.ย. ปีหน้า
+                start = new Date(y, 4, 1);
+                end = new Date(y + 1, 3, 30, 23, 59, 59);
                 filename = `Report_Year_${y+543}`;
             }
             else if (mode === 'term') {
@@ -534,15 +559,15 @@
                 const [term, thYear] = formValues;
                 const enYear = parseInt(thYear) - 543;
                 if (term === '1') {
-                    start = new Date(enYear, 4, 1); // 1 May
-                    end = new Date(enYear, 9, 31, 23, 59, 59); // 31 Oct
+                    start = new Date(enYear, 4, 1);
+                    end = new Date(enYear, 9, 31, 23, 59, 59);
                 } else {
-                    start = new Date(enYear, 10, 1); // 1 Nov
-                    end = new Date(enYear + 1, 3, 30, 23, 59, 59); // 30 Apr Next Year
+                    start = new Date(enYear, 10, 1);
+                    end = new Date(enYear + 1, 3, 30, 23, 59, 59);
                 }
                 filename = `Report_Term${term}_${thYear}`;
             }
-            else { // All
+            else { 
                 start = new Date(2000, 0, 1);
                 end = new Date();
                 filename = `Report_All`;
@@ -550,7 +575,6 @@
 
             Swal.fire({title:'<i class="fas fa-spinner fa-spin"></i> กำลังเตรียมไฟล์...', didOpen:()=>Swal.showLoading()});
             
-            // Query Firestore with Date Range
             const q = query(collection(db, "visits"), where("timestamp", ">=", start), where("timestamp", "<=", end), orderBy("timestamp", "desc"));
             const snap = await getDocs(q);
 
@@ -598,7 +622,6 @@
             document.getElementById('allTable').innerHTML = html;
         }
 
-        // --- View & Edit & Delete Functions (Same as before) ---
         window.viewStudent = async (sid) => {
             Swal.fire({title:'<i class="fas fa-spinner fa-spin"></i> Loading Profile...', didOpen:()=>Swal.showLoading()});
             const s = allStudents.find(x => x.id === sid);
@@ -680,7 +703,7 @@
             });
         };
 
-        window.delStudent = async (sid) => { /* Code เดิม */ 
+        window.delStudent = async (sid) => {
              if((await Swal.fire({title:'ยืนยันลบ?', text:'ข้อมูลและประวัติการรักษาจะหายไปทั้งหมด', icon:'warning', showCancelButton:true, confirmButtonColor:'#d33'})).isConfirmed) { await deleteDoc(doc(db, "students", sid)); Swal.fire('Deleted', '', 'success'); }
         };
 
@@ -688,9 +711,9 @@
             const mode = document.querySelector('input[name="impMode"]:checked').value;
             const hintBox = document.getElementById('hintBox');
             if(mode === 'std') {
-                hintBox.innerHTML = `<i class="fas fa-info-circle"></i> <b>รูปแบบ:</b> <code>รหัส ระดับชั้น ห้อง ชื่อ นามสกุล</code> หรือ <code>รหัส คำนำหน้า ชื่อ นามสกุล</code><br>ตัวอย่าง: <code>30101 ม.1 1 สมชาย ใจดี</code> (ระบบจะข้ามถ้ารหัสซ้ำ)`;
+                hintBox.innerHTML = `<i class="fas fa-info-circle"></i> <b>รูปแบบ:</b> <code>รหัส ระดับชั้น ห้อง ชื่อ นามสกุล</code><br>ตัวอย่าง: <code>30101 ม.1 1 สมชาย ใจดี</code> (ระบบจะข้ามถ้ารหัสซ้ำ)`;
             } else {
-                hintBox.innerHTML = `<i class="fas fa-info-circle"></i> <b>รูปแบบ:</b> <code>วันที่ เวลา รหัส ชื่อ อาการ ยา</code> (เว้นวรรค)<br>ตัวอย่าง: <code>25/01/2567 08:30 30101 สมชาย ปวดหัว พารา</code>`;
+                hintBox.innerHTML = `<i class="fas fa-info-circle"></i> <b>รูปแบบ:</b> <code>วันที่ เวลา รหัส ชื่อ อาการ ยา</code><br>ตัวอย่าง: <code>25/01/2567 08:30 30101 สมชาย ปวดหัว พารา</code>`;
             }
         };
 
@@ -751,7 +774,7 @@
                 Swal.fire({ icon: 'success', title: 'เสร็จสิ้น', html: msg });
                 document.getElementById('rawInput').value = '';
                 window.loadMonthlyStats();
-            } else { Swal.fire('Error', 'ไม่พบข้อมูลใหม่ หรือข้อมูลซ้ำทั้งหมด', 'error'); }
+            } else { Swal.fire('Error', 'ไม่พบข้อมูลใหม่', 'error'); }
         };
 
         window.promoteClass = async () => {
@@ -763,14 +786,13 @@
                         1. นักเรียนชั้น <b>ม.3 และ ม.6</b> จะถูกลบออกจากระบบ<br>
                         2. นักเรียนชั้นอื่นๆ จะถูกเลื่อนระดับ (ม.1->2, ฯลฯ)
                     </div>
-                    <p>ควรทำรายการนี้ในช่วงปิดเทอม (หลัง 30 เมษายน)</p>
                 `,
                 icon: 'warning',
-                showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'ยืนยันประมวลผล', cancelButtonText: 'ยกเลิก'
+                showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'ยืนยันประมวลผล'
             });
 
             if(result.isConfirmed) {
-                Swal.fire({title:'กำลังประมวลผล...', html:'กรุณาอย่าปิดหน้าต่าง', didOpen:()=>Swal.showLoading()});
+                Swal.fire({title:'กำลังประมวลผล...', didOpen:()=>Swal.showLoading()});
                 const snapshot = await getDocs(collection(db, "students"));
                 let deletedCount = 0; let promotedCount = 0;
                 let batch = writeBatch(db); let opCount = 0;
@@ -796,9 +818,9 @@
             }
         };
 
-        window.clearData = async () => { /* Code เดิม */ 
-             const result = await Swal.fire({ title: 'ล้างข้อมูลทดสอบ?', html: `<div class="text-danger mb-3"><i class="fas fa-exclamation-triangle fa-3x"></i></div><p>คุณต้องการลบข้อมูลส่วนไหน?</p><div class="form-check text-start d-inline-block"><input class="form-check-input" type="checkbox" id="delVisits" checked><label class="form-check-label" for="delVisits">ประวัติการรักษาทั้งหมด</label></div><br><div class="form-check text-start d-inline-block"><input class="form-check-input" type="checkbox" id="delStudents"><label class="form-check-label" for="delStudents">รายชื่อนักเรียนทั้งหมด</label></div>`, showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'ยืนยันลบ', cancelButtonText: 'ยกเลิก', preConfirm: () => ({ visits: document.getElementById('delVisits').checked, students: document.getElementById('delStudents').checked }) });
-            if (result.isConfirmed) { Swal.fire({title:'กำลังลบ...', didOpen:()=>Swal.showLoading()}); const batch = writeBatch(db); let count = 0; if (result.value.visits) { const q = await getDocs(collection(db, "visits")); q.forEach(d => { batch.delete(d.ref); count++; }); } if (result.value.students) { const q = await getDocs(collection(db, "students")); q.forEach(d => { batch.delete(d.ref); count++; }); } if(count > 0) { await batch.commit(); Swal.fire('Deleted', `ลบข้อมูลเรียบร้อย (${count} records)`, 'success'); allStudents = []; document.getElementById('todayList').innerHTML = ''; document.getElementById('allTable').innerHTML = ''; window.loadMonthlyStats(); } else { Swal.fire('Info', 'ไม่มีข้อมูลให้ลบ', 'info'); } }
+        window.clearData = async () => {
+             const result = await Swal.fire({ title: 'ล้างข้อมูลทดสอบ?', html: `<div class="text-danger mb-3"><i class="fas fa-exclamation-triangle fa-3x"></i></div><p>คุณต้องการลบข้อมูลส่วนไหน?</p><div class="form-check text-start d-inline-block"><input class="form-check-input" type="checkbox" id="delVisits" checked><label class="form-check-label" for="delVisits">ประวัติการรักษาทั้งหมด</label></div><br><div class="form-check text-start d-inline-block"><input class="form-check-input" type="checkbox" id="delStudents"><label class="form-check-label" for="delStudents">รายชื่อนักเรียนทั้งหมด</label></div>`, showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'ยืนยันลบ', preConfirm: () => ({ visits: document.getElementById('delVisits').checked, students: document.getElementById('delStudents').checked }) });
+            if (result.isConfirmed) { Swal.fire({title:'กำลังลบ...', didOpen:()=>Swal.showLoading()}); const batch = writeBatch(db); let count = 0; if (result.value.visits) { const q = await getDocs(collection(db, "visits")); q.forEach(d => { batch.delete(d.ref); count++; }); } if (result.value.students) { const q = await getDocs(collection(db, "students")); q.forEach(d => { batch.delete(d.ref); count++; }); } if(count > 0) { await batch.commit(); Swal.fire('Deleted', `ลบข้อมูลเรียบร้อย`, 'success'); allStudents = []; window.loadMonthlyStats(); } else { Swal.fire('Info', 'ไม่มีข้อมูลให้ลบ', 'info'); } }
         };
 
     </script>
