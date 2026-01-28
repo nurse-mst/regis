@@ -111,13 +111,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- เพิ่มฟังก์ชัน Masking สำหรับปิดบังเบอร์โทรศัพท์ ---
-        const maskPhone = (phone) => {
-            if (!phone || phone.length < 10) return "xxxxxxxxxx";
-            // แสดงเฉพาะตัวท้าย 2 ตัว เช่น xxxxxxxx07
-            return "xxxxxxxx" + phone.substring(8);
-        };
-
         window.checkStudent = async () => {
             const sid = document.getElementById('sid').value;
             if(!sid) return Swal.fire('แจ้งเตือน','กรุณากรอกรหัสนักเรียน','warning');
@@ -131,7 +124,8 @@
 
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    if (!data.phone || data.phone.length < 10 || !data.dob) {
+                    // บังคับกรอกข้อมูลเพิ่ม หากเบอร์โทรหาย หรือระดับชั้นยังไม่ระบุ
+                    if (!data.phone || data.phone.length < 10 || !data.dob || !data.level) {
                         registerForm(sid, data); 
                     } else {
                         confirmVisit(sid, data);
@@ -145,7 +139,10 @@
         };
 
         window.registerForm = (sid, oldData) => {
-            let rooms = ''; for(let i=0; i<=10; i++) rooms += `<option value="${i}" ${oldData?.room == i ? 'selected' : ''}>ห้อง ${i}</option>`;
+            let rooms = ''; for(let i=1; i<=10; i++) rooms += `<option value="${i}" ${oldData?.room == i ? 'selected' : ''}>ห้อง ${i}</option>`;
+            let levels = ['ม.1','ม.2','ม.3','ม.4','ม.5','ม.6'];
+            let lOpt = levels.map(l => `<option ${oldData?.level == l ? 'selected':''}>${l}</option>`).join('');
+            
             let dOpt = '<option value="">วัน</option>'; for(let i=1; i<=31; i++) dOpt += `<option value="${i}">${i}</option>`;
             let mOpt = '<option value="">เดือน</option>'; ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."].forEach((m,i)=> mOpt+=`<option value="${i+1}">${m}</option>`);
             let yOpt = '<option value="">ปี พ.ศ.</option>'; let cy = new Date().getFullYear()+543; for(let i=cy-5; i>=cy-20; i--) yOpt += `<option value="${i}">${i}</option>`;
@@ -158,31 +155,32 @@
                         <div class="col-4"><label class="mb-1 small">คำนำหน้า</label>
                             <select id="f1" class="form-select">
                                 <option ${oldData?.prefix === 'นาย' ? 'selected' : ''}>นาย</option>
-                                <option ${oldData?.prefix === 'นาง' ? 'selected' : ''}>นาง</option>
                                 <option ${oldData?.prefix === 'นางสาว' ? 'selected' : ''}>นางสาว</option>
                                 <option ${oldData?.prefix === 'ด.ช.' ? 'selected' : ''}>ด.ช.</option>
                                 <option ${oldData?.prefix === 'ด.ญ.' ? 'selected' : ''}>ด.ญ.</option>
+                                <option ${oldData?.prefix === 'นาง' ? 'selected' : ''}>นาง</option>
                             </select>
                         </div>
                         <div class="col-4"><label class="mb-1 small">ชื่อ</label><input id="f2" class="form-control" value="${oldData?.fname || ''}"></div>
                         <div class="col-4"><label class="mb-1 small">สกุล</label><input id="f3" class="form-control" value="${oldData?.lname || ''}"></div>
                     </div>
                     <div class="row g-2 mb-2">
-                        <div class="col-6"><label class="mb-1 small">ห้อง/ชั้น</label><select id="f7" class="form-select">${rooms}</select></div>
-                        <div class="col-6">
-                            <label class="mb-1 small text-danger">เบอร์โทร (10 หลัก)</label>
-                            <input id="f4" class="form-control border-danger" type="tel" maxlength="10" placeholder="08xxxxxxxx" value="${oldData?.phone || ''}">
-                        </div>
-                    </div>
-                    <label class="mb-1 small">วัน/เดือน/ปีเกิด</label><div class="input-group mb-2"><select id="bd_d" class="form-select">${dOpt}</select><select id="bd_m" class="form-select">${mOpt}</select><select id="bd_y" class="form-select">${yOpt}</select></div>
-                    <div class="row g-2 mb-2">
-                         <div class="col-8"><label class="text-danger fw-bold mb-1 small">แพ้ยา/อาหาร</label><input id="f6" class="form-control" value="${oldData?.allergy || '-'}"></div>
-                         <div class="col-4"><label class="mb-1 small">เลือด</label><select id="f5" class="form-select">
+                        <div class="col-4"><label class="mb-1 small">ระดับชั้น</label><select id="f_lvl" class="form-select">${lOpt}</select></div>
+                        <div class="col-4"><label class="mb-1 small">ห้อง</label><select id="f7" class="form-select">${rooms}</select></div>
+                        <div class="col-4"><label class="mb-1 small">เลือด</label><select id="f5" class="form-select">
                             <option ${oldData?.blood === 'A' ? 'selected' : ''}>A</option>
                             <option ${oldData?.blood === 'B' ? 'selected' : ''}>B</option>
                             <option ${oldData?.blood === 'O' ? 'selected' : ''}>O</option>
                             <option ${oldData?.blood === 'AB' ? 'selected' : ''}>AB</option>
                          </select></div>
+                    </div>
+                    <div class="mb-2">
+                         <label class="mb-1 small text-danger">เบอร์โทร (10 หลัก)</label>
+                         <input id="f4" class="form-control border-danger" type="tel" maxlength="10" placeholder="08xxxxxxxx" value="${oldData?.phone || ''}">
+                    </div>
+                    <label class="mb-1 small">วัน/เดือน/ปีเกิด</label><div class="input-group mb-2"><select id="bd_d" class="form-select">${dOpt}</select><select id="bd_m" class="form-select">${mOpt}</select><select id="bd_y" class="form-select">${yOpt}</select></div>
+                    <div class="mb-2">
+                         <label class="text-danger fw-bold mb-1 small">แพ้ยา/อาหาร (ถ้าไม่มีขีด - )</label><input id="f6" class="form-control" value="${oldData?.allergy || '-'}">
                     </div>
                     <div class="p-3 rounded bg-warning-subtle border border-warning mt-3">
                         <label class="mb-1 fw-bold small">ผู้ปกครอง (สำหรับติดต่อฉุกเฉิน)</label>
@@ -210,6 +208,7 @@
                         fname: f2, lname: document.getElementById('f3').value.trim(),
                         phone: f4, blood: document.getElementById('f5').value,
                         allergy: document.getElementById('f6').value.trim(),
+                        level: document.getElementById('f_lvl').value,
                         room: document.getElementById('f7').value,
                         parent: f8, parentPhone: f9, 
                         dob: `${bd_d}/${document.getElementById('bd_m').value}/${document.getElementById('bd_y').value}`
@@ -225,15 +224,12 @@
         };
 
         window.confirmVisit = (sid, data) => {
-            // --- เรียกใช้การปิดบังเบอร์โทรศัพท์ก่อนแสดงผล ---
-            const safePhone = maskPhone(data.phone);
-
             Swal.fire({
                 title: 'ยืนยันข้อมูลเข้ารับบริการ',
                 html: `<div class="p-3 border rounded text-start bg-light">
                         <h5 class="text-primary fw-bold mb-2">${data.prefix}${data.fname} ${data.lname}</h5>
-                        <p class="mb-1 small"><b>เบอร์โทร:</b> ${safePhone}</p>
-                        <p class="mb-1 small"><b>ชั้น/ห้อง:</b> ${data.room}</p>
+                        <p class="mb-1 small"><b>เบอร์โทร:</b> ${data.phone}</p>
+                        <p class="mb-1 small"><b>ชั้น/ห้อง:</b> <span class="badge bg-secondary">${data.level} / ${data.room}</span></p>
                         <p class="mb-0 small"><b>ประวัติการแพ้:</b> <span class="text-danger fw-bold">${data.allergy}</span></p>
                        </div>`,
                 showCancelButton: true, confirmButtonText: 'ยืนยันส่งรายชื่อ', confirmButtonColor: '#6A1B9A', cancelButtonText: 'ยกเลิก'
@@ -242,7 +238,7 @@
                     Swal.fire({didOpen:()=>Swal.showLoading(), allowOutsideClick: false});
                     await addDoc(collection(db, "visits"), {
                         studentId: sid, studentName: `${data.prefix}${data.fname} ${data.lname}`,
-                        room: data.room, timestamp: serverTimestamp(), status: "Pending",
+                        level: data.level, room: data.room, timestamp: serverTimestamp(), status: "Pending",
                         category: "", detail: "", medicine: ""
                     });
                     Swal.fire('สำเร็จ', 'ส่งรายชื่อเข้าคิวห้องพยาบาลแล้ว', 'success');
