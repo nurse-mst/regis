@@ -241,14 +241,20 @@
             const loginBox = document.getElementById('loginArea');
             const mainBox = document.getElementById('mainArea');
             if (user) {
+                // *** FIX: Remove d-flex class to ensure display:none works ***
+                loginBox.classList.remove('d-flex'); 
                 loginBox.style.display = 'none';
+                
                 mainBox.style.display = 'block';
                 document.getElementById('userEmail').innerHTML = `<i class="fas fa-user-circle me-2"></i>${user.email}`;
                 const now = new Date();
                 document.getElementById('statMonthPicker').value = now.toISOString().slice(0, 7);
                 initSystem();
             } else {
+                // *** FIX: Add d-flex back when showing login ***
+                loginBox.classList.add('d-flex');
                 loginBox.style.display = 'flex';
+                
                 mainBox.style.display = 'none';
             }
         });
