@@ -98,7 +98,22 @@
                                     <h5 class="fw-bold text-success m-0"><i class="fas fa-clipboard-check me-2"></i>ประวัติวันนี้</h5>
                                     <div class="d-flex gap-2">
                                         <button onclick="window.openConfig()" class="btn btn-outline-primary btn-sm rounded-pill"><i class="fas fa-cog me-1"></i> ตั้งค่าตัวเลือก</button>
-                                        <button onclick="window.exportToCSV()" class="btn btn-success btn-sm rounded-pill"><i class="fas fa-file-excel me-1"></i> ส่งออกข้อมูล</button>
+                                        
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-success btn-sm rounded-pill dropdown-toggle shadow-sm" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="fas fa-file-download me-1"></i> สรุปรายงาน
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                                <li><h6 class="dropdown-header">เลือกช่วงเวลา</h6></li>
+                                                <li><button class="dropdown-item" onclick="window.exportReport('day')"><i class="fas fa-calendar-day me-2 text-primary"></i>รายวัน (วันนี้)</button></li>
+                                                <li><button class="dropdown-item" onclick="window.exportReport('month')"><i class="fas fa-calendar-alt me-2 text-success"></i>รายเดือน (เดือนนี้)</button></li>
+                                                <li><button class="dropdown-item" onclick="window.exportReport('term')"><i class="fas fa-graduation-cap me-2 text-warning"></i>รายเทอม</button></li>
+                                                <li><button class="dropdown-item" onclick="window.exportReport('year')"><i class="fas fa-calendar me-2 text-danger"></i>รายปีการศึกษา</button></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><button class="dropdown-item" onclick="window.exportReport('all')"><i class="fas fa-database me-2 text-secondary"></i>ทั้งหมด</button></li>
+                                            </ul>
+                                        </div>
+
                                     </div>
                                 </div>
                                 <div class="card-body p-0">
@@ -227,7 +242,6 @@
 
         let defaultCats = ["ปวดหัว/ไข้", "ปวดท้อง", "ทำแผล", "ปวดประจำเดือน", "พักผ่อน", "อุบัติเหตุ", "อื่นๆ"];
         let defaultMeds = ["พาราเซตามอล", "ยาธาตุน้ำขาว", "ยาแก้แพ้", "เบตาดีน", "พลาสเตอร์", "ยาหอม", "เกลือแร่", "ยาแดง"];
-        // Mapping อาการ -> ยาแนะนำ
         const suggestionMap = {
             "ปวดหัว": ["พาราเซตามอล"], "ไข้": ["พาราเซตามอล"], "ตัวร้อน": ["พาราเซตามอล"],
             "ปวดท้อง": ["ยาธาตุน้ำขาว"], "ท้องเสีย": ["เกลือแร่"],
@@ -274,7 +288,7 @@
         window.logout = () => signOut(auth).then(() => location.reload());
 
         function startRealtimeListeners() {
-            // 1. Pending Queue (Update: เพิ่มปุ่ม ลบ และ ดูรายละเอียด)
+            // 1. Pending Queue
             const qPending = query(collection(db, "visits"), where("status", "==", "Pending"), orderBy("timestamp", "asc"));
             onSnapshot(qPending, (snap) => {
                 const html = snap.empty ? `<tr><td class="text-center text-muted py-4"><i class="fas fa-check-circle text-success me-2"></i>ไม่มีเคสรอรับบริการ</td></tr>` : 
@@ -307,7 +321,6 @@
             onSnapshot(qToday, (snap) => {
                 const html = snap.docs.map(d => {
                     const v = d.data();
-                    // ตรวจสอบ Level ถ้าไม่มีให้ดึงจากนักเรียน (หรือแสดง -)
                     const lvl = v.level || (allStudents.find(s=>s.id==v.studentId)?.level) || '-';
                     return `<tr>
                         <td class="text-start fw-bold text-primary">${v.studentName}</td>
@@ -327,7 +340,7 @@
             });
         }
 
-        window.loadMonthlyStats = async () => { /* ...code เดิม... */ 
+        window.loadMonthlyStats = async () => { /* Stats Logic */ 
             const picker = document.getElementById('statMonthPicker').value; if(!picker) return;
             const [year, month] = picker.split('-').map(Number);
             const startDate = new Date(year, month - 1, 1);
@@ -351,14 +364,13 @@
             }
         };
 
-        // --- Core: Treatment Logic with Search & Suggest ---
+        // --- Treatment Logic ---
         window.treat = async (visitId, studentId, isEdit = false) => {
             Swal.fire({title:'<i class="fas fa-spinner fa-spin"></i> Loading...', didOpen:()=>Swal.showLoading()});
             
             const sSnap = await getDoc(doc(db, "students", studentId));
             const s = sSnap.exists() ? sSnap.data() : { allergy:'-', phone:'-', dob:'-', prefix:'', fname:'ไม่พบ', lname:'ข้อมูล', level:'-', room:'-' };
             
-            // Get Visit Data if Editing
             let currentVisitData = {};
             if(isEdit) {
                 const vSnap = await getDoc(doc(db, "visits", visitId));
@@ -378,10 +390,7 @@
 
             Swal.close();
 
-            // Prepare UI Components
             const catDatalist = defaultCats.map(c=>`<option value="${c}">`).join('');
-            
-            // Logic to check checkboxes based on current edit data
             const checkedMeds = currentVisitData.medicine ? currentVisitData.medicine.split(', ') : [];
             const medChecks = defaultMeds.map(m => {
                 const isChecked = checkedMeds.includes(m) ? 'checked' : '';
@@ -427,11 +436,8 @@
                         <div class="med-container" id="medBox">${medChecks}</div>
                     </div>
                 </div>`,
-                showCancelButton: true,
-                confirmButtonText: '<i class="fas fa-save me-1"></i> บันทึกข้อมูล',
-                confirmButtonColor: '#6A1B9A',
+                showCancelButton: true, confirmButtonText: '<i class="fas fa-save me-1"></i> บันทึกข้อมูล', confirmButtonColor: '#6A1B9A',
                 didOpen: () => {
-                    // Inject JS functions into Swal scope
                     window.filterMeds = () => {
                         const txt = document.getElementById('medSearch').value.toLowerCase();
                         document.querySelectorAll('.med-item').forEach(el => {
@@ -441,11 +447,7 @@
                     window.suggestMeds = () => {
                         const sym = document.getElementById('s_cat').value;
                         const keywords = Object.keys(suggestionMap);
-                        let found = false;
-                        
-                        // Reset highlights
                         document.querySelectorAll('.med-item').forEach(e => e.classList.remove('suggest-highlight'));
-
                         keywords.forEach(k => {
                             if (sym.includes(k)) {
                                 suggestionMap[k].forEach(medName => {
@@ -456,7 +458,6 @@
                                         chk.closest('.med-item').scrollIntoView({behavior: "smooth", block: "center"});
                                     }
                                 });
-                                found = true;
                             }
                         });
                     };
@@ -465,14 +466,10 @@
                     return {
                         sUpdate: { allergy: document.getElementById('e_al').value, phone: document.getElementById('e_ph').value, dob: document.getElementById('e_dob').value },
                         vUpdate: { 
-                            category: document.getElementById('s_cat').value, 
-                            detail: document.getElementById('s_det').value,
+                            category: document.getElementById('s_cat').value, detail: document.getElementById('s_det').value,
                             medicine: Array.from(document.querySelectorAll('.mc:checked')).map(e=>e.value).join(', '), 
-                            status: 'Completed',
-                            // If edit, don't update timestamp unless it's a new record
-                            ...(isEdit ? {} : { timestamp: new Date() }),
-                            level: s.level, // Update level in visit record too
-                            room: s.room
+                            status: 'Completed', ...(isEdit ? {} : { timestamp: new Date() }),
+                            level: s.level, room: s.room
                         }
                     }
                 }
@@ -480,8 +477,7 @@
                 if(r.isConfirmed) {
                     const batch = writeBatch(db);
                     if(sSnap.exists()) batch.update(doc(db, "students", studentId), r.value.sUpdate);
-                    const vData = r.value.vUpdate;
-                    batch.update(doc(db, "visits", visitId), vData);
+                    batch.update(doc(db, "visits", visitId), r.value.vUpdate);
                     await batch.commit();
                     Swal.fire({icon:'success', title:'บันทึกเรียบร้อย', timer:1500, showConfirmButton:false});
                     window.loadMonthlyStats();
@@ -499,10 +495,70 @@
             if (formValues) { await setDoc(doc(db, "settings", "global"), formValues); defaultCats = formValues.categories; defaultMeds = formValues.medicines; Swal.fire('Updated', 'อัปเดตตัวเลือกเรียบร้อยแล้ว', 'success'); }
         };
 
-        window.exportToCSV = async () => { /* Code เดิม */
+        // --- NEW: Export Logic ---
+        window.exportReport = async (mode) => {
+            let start, end, filename;
+            const now = new Date();
+
+            if (mode === 'day') {
+                start = new Date(now.setHours(0,0,0,0));
+                end = new Date(now.setHours(23,59,59,999));
+                filename = `Report_Daily_${now.toLocaleDateString('th-TH').replace(/\//g,'-')}`;
+            }
+            else if (mode === 'month') {
+                start = new Date(now.getFullYear(), now.getMonth(), 1);
+                end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+                filename = `Report_Monthly_${now.getMonth()+1}-${now.getFullYear()+543}`;
+            }
+            else if (mode === 'year') {
+                // ปีการศึกษา (พฤษภาคม - เมษายนปีหน้า)
+                const y = now.getMonth() < 4 ? now.getFullYear() - 1 : now.getFullYear();
+                start = new Date(y, 4, 1); // 1 พ.ค.
+                end = new Date(y + 1, 3, 30, 23, 59, 59); // 30 เม.ย. ปีหน้า
+                filename = `Report_Year_${y+543}`;
+            }
+            else if (mode === 'term') {
+                const { value: formValues } = await Swal.fire({
+                    title: 'เลือกเทอม/ปีการศึกษา',
+                    html: `
+                        <select id="swal-term" class="form-select mb-2">
+                            <option value="1">เทอม 1 (1 พ.ค. - 31 ต.ค.)</option>
+                            <option value="2">เทอม 2 (1 พ.ย. - 30 เม.ย.)</option>
+                        </select>
+                        <input id="swal-year" type="number" class="form-control" value="${now.getFullYear()+543}" placeholder="ปี พ.ศ.">
+                    `,
+                    focusConfirm: false,
+                    preConfirm: () => [document.getElementById('swal-term').value, document.getElementById('swal-year').value]
+                });
+                if (!formValues) return;
+                const [term, thYear] = formValues;
+                const enYear = parseInt(thYear) - 543;
+                if (term === '1') {
+                    start = new Date(enYear, 4, 1); // 1 May
+                    end = new Date(enYear, 9, 31, 23, 59, 59); // 31 Oct
+                } else {
+                    start = new Date(enYear, 10, 1); // 1 Nov
+                    end = new Date(enYear + 1, 3, 30, 23, 59, 59); // 30 Apr Next Year
+                }
+                filename = `Report_Term${term}_${thYear}`;
+            }
+            else { // All
+                start = new Date(2000, 0, 1);
+                end = new Date();
+                filename = `Report_All`;
+            }
+
             Swal.fire({title:'<i class="fas fa-spinner fa-spin"></i> กำลังเตรียมไฟล์...', didOpen:()=>Swal.showLoading()});
-            const q = query(collection(db, "visits"), orderBy("timestamp", "desc"));
+            
+            // Query Firestore with Date Range
+            const q = query(collection(db, "visits"), where("timestamp", ">=", start), where("timestamp", "<=", end), orderBy("timestamp", "desc"));
             const snap = await getDocs(q);
+
+            if(snap.empty) {
+                Swal.fire('ไม่พบข้อมูล', 'ไม่มีข้อมูลในช่วงเวลาที่เลือก', 'info');
+                return;
+            }
+
             let csv = "\uFEFFวันที่,เวลา,รหัสนักเรียน,ชื่อ-สกุล,ระดับชั้น,ห้อง,อาการ,รายละเอียด,ยาที่จ่าย\n";
             snap.forEach(d => {
                 const v = d.data();
@@ -510,8 +566,13 @@
                 const clean = t => `"${(t||'').replace(/"/g,'""')}"`;
                 csv += `${date.toLocaleDateString('th-TH')},${date.toLocaleTimeString('th-TH')},${clean(v.studentId)},${clean(v.studentName)},${clean(v.level)},${clean(v.room)},${clean(v.category)},${clean(v.detail)},${clean(v.medicine)}\n`;
             });
+
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `HealthReport_${new Date().toISOString().slice(0,10)}.csv`; link.click(); Swal.close();
+            const link = document.createElement("a"); 
+            link.href = URL.createObjectURL(blob); 
+            link.download = `${filename}.csv`; 
+            link.click(); 
+            Swal.close();
         };
 
         window.filterStd = () => {
@@ -537,7 +598,7 @@
             document.getElementById('allTable').innerHTML = html;
         }
 
-        // --- View Student (With Edit History Capability) ---
+        // --- View & Edit & Delete Functions (Same as before) ---
         window.viewStudent = async (sid) => {
             Swal.fire({title:'<i class="fas fa-spinner fa-spin"></i> Loading Profile...', didOpen:()=>Swal.showLoading()});
             const s = allStudents.find(x => x.id === sid);
@@ -607,14 +668,10 @@
                 showCancelButton: true, confirmButtonText: 'บันทึกแก้ไข',
                 preConfirm: () => {
                     return {
-                        prefix: document.getElementById('ed_pf').value,
-                        fname: document.getElementById('ed_fn').value,
-                        lname: document.getElementById('ed_ln').value,
-                        level: document.getElementById('ed_lv').value,
-                        room: document.getElementById('ed_rm').value,
-                        phone: document.getElementById('ed_ph').value,
-                        allergy: document.getElementById('ed_al').value,
-                        parent: document.getElementById('ed_pa').value,
+                        prefix: document.getElementById('ed_pf').value, fname: document.getElementById('ed_fn').value,
+                        lname: document.getElementById('ed_ln').value, level: document.getElementById('ed_lv').value,
+                        room: document.getElementById('ed_rm').value, phone: document.getElementById('ed_ph').value,
+                        allergy: document.getElementById('ed_al').value, parent: document.getElementById('ed_pa').value,
                         parentPhone: document.getElementById('ed_pp').value,
                     }
                 }
@@ -648,41 +705,25 @@
                 lines.forEach(l => {
                     const cleanL = l.trim();
                     if(!cleanL) return;
-                    
                     const idMatch = cleanL.match(/\b\d{5}\b/);
                     if(idMatch) {
                         const id = idMatch[0];
                         if (existingIds.has(id)) { skipped++; return; }
-
-                        // Parse Format: ID Level Room Name... OR ID Prefix Name...
-                        // Assume format: ID Level Room Prefix Name LastName (Standard School List)
-                        // Or simple: ID Level Room Name
                         const parts = cleanL.replace(id, '').trim().split(/\s+/);
                         let level = '-', room = '-', prefix = '', fname = '-', lname = '-';
-                        
-                        // Heuristic: Check if parts[0] is like "ม."
                         let nameIdx = 0;
-                        if (parts[0] && parts[0].includes('ม.')) {
-                            level = parts[0];
-                            room = parts[1] || '-';
-                            nameIdx = 2;
-                        }
-
-                        // Determine Name components
+                        if (parts[0] && parts[0].includes('ม.')) { level = parts[0]; room = parts[1] || '-'; nameIdx = 2; }
                         const nameParts = parts.slice(nameIdx);
                         if(nameParts.length >= 3) { prefix = nameParts[0]; fname = nameParts[1]; lname = nameParts[2]; }
                         else if(nameParts.length == 2) { fname = nameParts[0]; lname = nameParts[1]; }
                         else if(nameParts.length == 1) { fname = nameParts[0]; }
-
                         const ref = doc(db, "students", id);
                         batch.set(ref, { id, prefix, fname, lname, level, room, allergy:'-', phone:'-', dob:'-', parent:'-', parentPhone:'-' });
                         count++;
                     }
                 });
             } else {
-                // Import History Logic (เหมือนเดิม)
                 lines.forEach(l => {
-                   /* (Code เดิมส่วน Import History) */
                    const cleanL = l.trim();
                     if(!cleanL) return;
                     const parts = cleanL.split(/\s+/);
@@ -703,7 +744,6 @@
                     }
                 });
             }
-
             if(count > 0 || skipped > 0) {
                 await batch.commit();
                 let msg = `นำเข้าสำเร็จ ${count} รายการ`;
@@ -714,7 +754,6 @@
             } else { Swal.fire('Error', 'ไม่พบข้อมูลใหม่ หรือข้อมูลซ้ำทั้งหมด', 'error'); }
         };
 
-        // --- NEW: End of Academic Year Logic ---
         window.promoteClass = async () => {
             const result = await Swal.fire({
                 title: 'ประมวลผลสิ้นปีการศึกษา?',
@@ -727,58 +766,32 @@
                     <p>ควรทำรายการนี้ในช่วงปิดเทอม (หลัง 30 เมษายน)</p>
                 `,
                 icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                confirmButtonText: 'ยืนยันประมวลผล',
-                cancelButtonText: 'ยกเลิก'
+                showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'ยืนยันประมวลผล', cancelButtonText: 'ยกเลิก'
             });
 
             if(result.isConfirmed) {
                 Swal.fire({title:'กำลังประมวลผล...', html:'กรุณาอย่าปิดหน้าต่าง', didOpen:()=>Swal.showLoading()});
-                
-                // Firestore limit: 500 operations per batch. 
-                // We must handle this if students > 500. For simplicity here, we assume one batch or simple split.
-                // In production with 3000 students, you need to chunk arrays.
-                
                 const snapshot = await getDocs(collection(db, "students"));
-                const students = snapshot.docs;
-                
-                let deletedCount = 0;
-                let promotedCount = 0;
-                let batch = writeBatch(db);
-                let opCount = 0;
+                let deletedCount = 0; let promotedCount = 0;
+                let batch = writeBatch(db); let opCount = 0;
 
-                for (const docSnap of students) {
+                for (const docSnap of snapshot.docs) {
                     const s = docSnap.data();
                     const ref = doc(db, "students", docSnap.id);
-                    
-                    if (!s.level) continue; // Skip invalid data
-
+                    if (!s.level) continue; 
                     if (s.level.includes("ม.3") || s.level.includes("ม.6")) {
-                        // Delete
-                        batch.delete(ref);
-                        deletedCount++;
+                        batch.delete(ref); deletedCount++;
                     } else if (s.level.includes("ม.")) {
-                        // Promote: Extract number, add 1
                         const currentLvl = parseInt(s.level.replace(/\D/g, ''));
                         if (!isNaN(currentLvl) && currentLvl < 6) {
                             const newLvl = `ม.${currentLvl + 1}`;
-                            batch.update(ref, { level: newLvl });
-                            promotedCount++;
+                            batch.update(ref, { level: newLvl }); promotedCount++;
                         }
                     }
-
                     opCount++;
-                    // Commit batch every 400 ops to be safe
-                    if (opCount >= 400) {
-                        await batch.commit();
-                        batch = writeBatch(db); // New batch
-                        opCount = 0;
-                    }
+                    if (opCount >= 400) { await batch.commit(); batch = writeBatch(db); opCount = 0; }
                 }
-
-                if (opCount > 0) await batch.commit(); // Commit remaining
-
+                if (opCount > 0) await batch.commit(); 
                 Swal.fire('สำเร็จ', `ลบจบการศึกษา: ${deletedCount} คน<br>เลื่อนชั้น: ${promotedCount} คน`, 'success');
             }
         };
