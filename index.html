@@ -231,31 +231,30 @@
         };
 
         window.confirmVisit = (sid, data) => {
-         // --- เรียกใช้การปิดบังเบอร์โทรศัพท์ก่อนแสดงผล ---
-            const safePhone = maskPhone(data.phone);
-            
-            Swal.fire({
-                title: 'ยืนยันข้อมูลเข้ารับบริการ',
-                html: `<div class="p-3 border rounded text-start bg-light">
-                        <h5 class="text-primary fw-bold mb-2">${data.prefix}${data.fname} ${data.lname}</h5>
-                        <p class="mb-1 small"><b>เบอร์โทร:</b> ${data.phone}</p>
-                        <p class="mb-1 small"><b>ชั้น/ห้อง:</b> <span class="badge bg-secondary">${data.level} / ${data.room}</span></p>
-                        <p class="mb-0 small"><b>ประวัติการแพ้:</b> <span class="text-danger fw-bold">${data.allergy}</span></p>
-                       </div>`,
-                showCancelButton: true, confirmButtonText: 'ยืนยันส่งรายชื่อ', confirmButtonColor: '#6A1B9A', cancelButtonText: 'ยกเลิก'
-            }).then(async (r) => {
-                if(r.isConfirmed) {
-                    Swal.fire({didOpen:()=>Swal.showLoading(), allowOutsideClick: false});
-                    await addDoc(collection(db, "visits"), {
-                        studentId: sid, studentName: `${data.prefix}${data.fname} ${data.lname}`,
-                        level: data.level, room: data.room, timestamp: serverTimestamp(), status: "Pending",
-                        category: "", detail: "", medicine: ""
-                    });
-                    Swal.fire('สำเร็จ', 'ส่งรายชื่อเข้าคิวห้องพยาบาลแล้ว', 'success');
-                    document.getElementById('sid').value = '';
-                }
+    // --- 1. เรียกใช้ฟังก์ชันปิดบังเบอร์โทรศัพท์ ---
+    const safePhone = maskPhone(data.phone);
+    
+    Swal.fire({
+        title: 'ยืนยันข้อมูลเข้ารับบริการ',
+        html: `<div class="p-3 border rounded text-start bg-light">
+                <h5 class="text-primary fw-bold mb-2">${data.prefix}${data.fname} ${data.lname}</h5>
+                <p class="mb-1 small"><b>เบอร์โทร:</b> ${safePhone}</p> <p class="mb-1 small"><b>ชั้น/ห้อง:</b> <span class="badge bg-secondary">${data.level} / ${data.room}</span></p>
+                <p class="mb-0 small"><b>ประวัติการแพ้:</b> <span class="text-danger fw-bold">${data.allergy}</span></p>
+               </div>`,
+        showCancelButton: true, confirmButtonText: 'ยืนยันส่งรายชื่อ', confirmButtonColor: '#6A1B9A', cancelButtonText: 'ยกเลิก'
+    }).then(async (r) => {
+        if(r.isConfirmed) {
+            Swal.fire({didOpen:()=>Swal.showLoading(), allowOutsideClick: false});
+            await addDoc(collection(db, "visits"), {
+                studentId: sid, studentName: `${data.prefix}${data.fname} ${data.lname}`,
+                level: data.level, room: data.room, timestamp: serverTimestamp(), status: "Pending",
+                category: "", detail: "", medicine: ""
             });
-        };
+            Swal.fire('สำเร็จ', 'ส่งรายชื่อให้เจ้าหน้าที่แล้ว', 'success');
+            document.getElementById('sid').value = '';
+        }
+    });
+};
     </script>
 </body>
 </html>
