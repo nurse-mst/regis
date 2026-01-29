@@ -110,7 +110,14 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-
+        
+        // --- เพิ่มฟังก์ชัน Masking สำหรับปิดบังเบอร์โทรศัพท์ ---
+        const maskPhone = (phone) => {
+            if (!phone || phone.length < 10) return "xxxxxxxxxx";
+            // แสดงเฉพาะตัวท้าย 2 ตัว เช่น xxxxxxxx07
+            return "xxxxxxxx" + phone.substring(8);
+        };
+        
         window.checkStudent = async () => {
             const sid = document.getElementById('sid').value;
             if(!sid) return Swal.fire('แจ้งเตือน','กรุณากรอกรหัสนักเรียน','warning');
@@ -224,6 +231,9 @@
         };
 
         window.confirmVisit = (sid, data) => {
+         // --- เรียกใช้การปิดบังเบอร์โทรศัพท์ก่อนแสดงผล ---
+            const safePhone = maskPhone(data.phone);
+            
             Swal.fire({
                 title: 'ยืนยันข้อมูลเข้ารับบริการ',
                 html: `<div class="p-3 border rounded text-start bg-light">
