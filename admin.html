@@ -575,7 +575,7 @@
             html: `
                 <select id="swal-term" class="form-select mb-2">
                     <option value="1">เทอม 1 (1 พ.ค. - 20 ต.ค.)</option>
-                    <option value="2">เทอม 2 (1 พ.ย. - 30 เม.ย.)</option>
+                    <option value="2">เทอม 2 (21 ต.ค. - 30 เม.ย.)</option>
                 </select>
                 <input id="swal-year" type="number" class="form-control" value="${now.getFullYear()+543}" placeholder="ปี พ.ศ.">
             `,
@@ -588,11 +588,11 @@
         
         if (term === '1') {
             start = new Date(enYear, 4, 1); // 1 พ.ค.
-            // แก้ไขวันสิ้นสุดเทอม 1 เป็นวันที่ 20 ต.ค.
-            end = new Date(enYear, 9, 20, 23, 59, 59); 
+            end = new Date(enYear, 9, 20, 23, 59, 59); // สิ้นสุด 20 ต.ค.
         } else {
-            start = new Date(enYear, 10, 1); // 1 พ.ย.
-            end = new Date(enYear + 1, 3, 30, 23, 59, 59); // 30 เม.ย. ปีถัดไป
+            // ปรับวันที่เริ่มต้นเทอม 2 เป็น 21 ต.ค. (เดือน 9 ใน JS คือ ตุลาคม)
+            start = new Date(enYear, 9, 21); 
+            end = new Date(enYear + 1, 3, 30, 23, 59, 59); // สิ้นสุด 30 เม.ย. ปีถัดไป
         }
         filename = `Report_Term${term}_${thYear}`;
     }
