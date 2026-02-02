@@ -115,7 +115,7 @@
         const maskPhone = (phone) => {
             if (!phone || phone.length < 10) return "XXXXXXXXXX";
             // แสดงเฉพาะตัวท้าย 2 ตัว เช่น XXXXXXXXXX07
-            return "XXXXXX" + phone.substring(6);
+            return "XXX-XXX-" + phone.substring(6);
         };
         
         window.checkStudent = async () => {
