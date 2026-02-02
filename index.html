@@ -89,9 +89,15 @@
             <p class="text-muted small">FAR - MST</p>
         </div>
         <div class="mb-4">
-            <input type="tel" id="sid" class="form-control text-center fs-5 fw-bold" maxlength="5" placeholder="รหัสนักเรียน" inputmode="numeric">
+            <input type="tel" id="sid" class="form-control text-center fs-5 fw-bold" maxlength="10" placeholder="กรุณากรอกข้อมูล" inputmode="numeric">
+            
+            <div class="form-text mt-2 text-muted" style="font-size: 0.85rem;">
+                <i class="fas fa-user-graduate me-1"></i>  <b>นักเรียน:</b> ใช้รหัสนักเรียน<br>
+                <i class="fas fa-user-tie me-1"></i> <b>ครู/บุคลากร:</b> ใช้รหัสครู/บุคลากร<br>
+                <i class="fa-solid fa-user"></i>  <b>บุคคลทั่วไป:</b> ใช้เบอร์โทรศัพท์
+            </div>
         </div>
-        <button onclick="checkStudent()" class="btn btn-purple shadow">ตรวจสอบข้อมูล / เข้าตรวจ <i class="fas fa-search ms-2"></i></button>
+        <button onclick="checkStudent()" class="btn btn-purple shadow">ตรวจสอบข้อมูล / เข้ารับบริการ <i class="fas fa-search ms-2"></i></button>
         <div class="mt-4"><a href="history.html" class="text-decoration-none text-muted small"><i class="fas fa-history me-1"></i> ประวัติการรักษา</a></div>
     </div>
 
@@ -146,89 +152,132 @@
         };
 
         window.registerForm = (sid, oldData) => {
-            let rooms = ''; for(let i=1; i<=10; i++) rooms += `<option value="${i}" ${oldData?.room == i ? 'selected' : ''}>ห้อง ${i}</option>`;
-            let levels = ['ม.1','ม.2','ม.3','ม.4','ม.5','ม.6'];
-            let lOpt = levels.map(l => `<option ${oldData?.level == l ? 'selected':''}>${l}</option>`).join('');
+    // 1. เพิ่มตัวเลือกสำหรับบุคคลอื่นที่ไม่ใช่นักเรียน
+    let levels = ['ม.1','ม.2','ม.3','ม.4','ม.5','ม.6', 'ครู/บุคลากร', 'บุคคลทั่วไป'];
+    
+    let rooms = '<option value="-">-</option>'; 
+    for(let i=1; i<=15; i++) rooms += `<option value="${i}" ${oldData?.room == i ? 'selected' : ''}>ห้อง ${i}</option>`;
+    
+    let lOpt = levels.map(l => `<option value="${l}" ${oldData?.level == l ? 'selected':''}>${l}</option>`).join('');
+    
+    let dOpt = '<option value="">วัน</option>'; for(let i=1; i<=31; i++) dOpt += `<option value="${i}">${i}</option>`;
+    let mOpt = '<option value="">เดือน</option>'; ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."].forEach((m,i)=> mOpt+=`<option value="${i+1}">${m}</option>`);
+    let yOpt = '<option value="">ปี พ.ศ.</option>'; let cy = new Date().getFullYear()+543; for(let i=cy-5; i>=cy-60; i--) yOpt += `<option value="${i}">${i}</option>`; // ปรับปีให้กว้างขึ้นเผื่อผู้ใหญ่
+
+    Swal.fire({
+        title: oldData ? 'แก้ไขข้อมูล' : 'ลงทะเบียนใหม่',
+        html: `<div class="text-start p-1" style="font-family:'Prompt'; font-size: 0.9rem;">
+            <p class="text-center text-muted mb-3 small">กรุณากรอกข้อมูลให้ครบถ้วน</p>
+            <div class="row g-2 mb-2">
+                <div class="col-4"><label class="mb-1 small">คำนำหน้า</label>
+                    <select id="f1" class="form-select">
+                        <option ${oldData?.prefix === 'นาย' ? 'selected' : ''}>นาย</option>
+                        <option ${oldData?.prefix === 'นางสาว' ? 'selected' : ''}>นางสาว</option>
+                        <option ${oldData?.prefix === 'นาง' ? 'selected' : ''}>นาง</option>
+                        <option ${oldData?.prefix === 'ด.ช.' ? 'selected' : ''}>ด.ช.</option>
+                        <option ${oldData?.prefix === 'ด.ญ.' ? 'selected' : ''}>ด.ญ.</option>
+                    </select>
+                </div>
+                <div class="col-4"><label class="mb-1 small">ชื่อ</label><input id="f2" class="form-control" value="${oldData?.fname || ''}"></div>
+                <div class="col-4"><label class="mb-1 small">สกุล</label><input id="f3" class="form-control" value="${oldData?.lname || ''}"></div>
+            </div>
+            <div class="row g-2 mb-2">
+                <div class="col-6"><label class="mb-1 small text-primary fw-bold">สถานะ/ระดับชั้น</label><select id="f_lvl" class="form-select">${lOpt}</select></div>
+                <div class="col-6" id="room-box"><label class="mb-1 small">ห้อง</label><select id="f7" class="form-select">${rooms}</select></div>
+                <div class="col-12"><label class="mb-1 small">เลือด</label><select id="f5" class="form-select">
+                    <option ${oldData?.blood === 'A' ? 'selected' : ''}>A</option>
+                    <option ${oldData?.blood === 'B' ? 'selected' : ''}>B</option>
+                    <option ${oldData?.blood === 'O' ? 'selected' : ''}>O</option>
+                    <option ${oldData?.blood === 'AB' ? 'selected' : ''}>AB</option>
+                    <option ${oldData?.blood === '-' ? 'selected' : ''} value="-">ไม่ทราบ</option>
+                 </select></div>
+            </div>
+            <div class="mb-2">
+                 <label class="mb-1 small text-danger">เบอร์โทร (10 หลัก)</label>
+                 <input id="f4" class="form-control border-danger" type="tel" maxlength="10" placeholder="08XXXXXXXX" value="${oldData?.phone || ''}">
+            </div>
+            <label class="mb-1 small">วัน/เดือน/ปีเกิด</label><div class="input-group mb-2"><select id="bd_d" class="form-select">${dOpt}</select><select id="bd_m" class="form-select">${mOpt}</select><select id="bd_y" class="form-select">${yOpt}</select></div>
+            <div class="mb-2">
+                 <label class="text-danger fw-bold mb-1 small">แพ้ยา/อาหาร (ถ้าไม่มีขีด - )</label><input id="f6" class="form-control" value="${oldData?.allergy || '-'}">
+            </div>
             
-            let dOpt = '<option value="">วัน</option>'; for(let i=1; i<=31; i++) dOpt += `<option value="${i}">${i}</option>`;
-            let mOpt = '<option value="">เดือน</option>'; ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."].forEach((m,i)=> mOpt+=`<option value="${i+1}">${m}</option>`);
-            let yOpt = '<option value="">ปี พ.ศ.</option>'; let cy = new Date().getFullYear()+543; for(let i=cy-5; i>=cy-20; i--) yOpt += `<option value="${i}">${i}</option>`;
-
-            Swal.fire({
-                title: oldData ? 'ข้อมูลจำเป็นกรณีฉุกเฉิน' : 'ลงทะเบียนผู้ป่วยใหม่',
-                html: `<div class="text-start p-1" style="font-family:'Prompt'; font-size: 0.9rem;">
-                    <p class="text-center text-muted mb-3 small">กรุณากรอกข้อมูลให้ครบถ้วนเพื่อใช้ในการดูประวัติและติดต่อฉุกเฉิน</p>
-                    <div class="row g-2 mb-2">
-                        <div class="col-4"><label class="mb-1 small">คำนำหน้า</label>
-                            <select id="f1" class="form-select">
-                                <option ${oldData?.prefix === 'นาย' ? 'selected' : ''}>นาย</option>
-                                <option ${oldData?.prefix === 'นางสาว' ? 'selected' : ''}>นางสาว</option>
-                                <option ${oldData?.prefix === 'ด.ช.' ? 'selected' : ''}>ด.ช.</option>
-                                <option ${oldData?.prefix === 'ด.ญ.' ? 'selected' : ''}>ด.ญ.</option>
-                                <option ${oldData?.prefix === 'นาง' ? 'selected' : ''}>นาง</option>
-                            </select>
-                        </div>
-                        <div class="col-4"><label class="mb-1 small">ชื่อ</label><input id="f2" class="form-control" value="${oldData?.fname || ''}"></div>
-                        <div class="col-4"><label class="mb-1 small">สกุล</label><input id="f3" class="form-control" value="${oldData?.lname || ''}"></div>
-                    </div>
-                    <div class="row g-2 mb-2">
-                        <div class="col-4"><label class="mb-1 small">ระดับชั้น</label><select id="f_lvl" class="form-select">${lOpt}</select></div>
-                        <div class="col-4"><label class="mb-1 small">ห้อง</label><select id="f7" class="form-select">${rooms}</select></div>
-                        <div class="col-4"><label class="mb-1 small">เลือด</label><select id="f5" class="form-select">
-                            <option ${oldData?.blood === 'A' ? 'selected' : ''}>A</option>
-                            <option ${oldData?.blood === 'B' ? 'selected' : ''}>B</option>
-                            <option ${oldData?.blood === 'O' ? 'selected' : ''}>O</option>
-                            <option ${oldData?.blood === 'AB' ? 'selected' : ''}>AB</option>
-                         </select></div>
-                    </div>
-                    <div class="mb-2">
-                         <label class="mb-1 small text-danger">เบอร์โทร (10 หลัก)</label>
-                         <input id="f4" class="form-control border-danger" type="tel" maxlength="10" placeholder="08XXXXXXXX" value="${oldData?.phone || ''}">
-                    </div>
-                    <label class="mb-1 small">วัน/เดือน/ปีเกิด</label><div class="input-group mb-2"><select id="bd_d" class="form-select">${dOpt}</select><select id="bd_m" class="form-select">${mOpt}</select><select id="bd_y" class="form-select">${yOpt}</select></div>
-                    <div class="mb-2">
-                         <label class="text-danger fw-bold mb-1 small">แพ้ยา/อาหาร (ถ้าไม่มีขีด - )</label><input id="f6" class="form-control" value="${oldData?.allergy || '-'}">
-                    </div>
-                    <div class="p-3 rounded bg-warning-subtle border border-warning mt-3">
-                        <label class="mb-1 fw-bold small">ผู้ปกครอง (สำหรับติดต่อฉุกเฉิน)</label>
-                        <input id="f8" class="form-control mb-2" placeholder="ชื่อ-นามสกุลผู้ปกครอง" value="${oldData?.parent || ''}">
-                        <input id="f9" class="form-control border-danger" placeholder="เบอร์โทรผู้ปกครอง (10 หลัก)" type="tel" maxlength="10" value="${oldData?.parentPhone || ''}">
-                    </div>
-                </div>`,
-                confirmButtonText: 'บันทึกและเข้าตรวจ', confirmButtonColor: '#6A1B9A',
-                showCancelButton: true, cancelButtonText: 'ยกเลิก',
-                preConfirm: () => {
-                    const f2 = document.getElementById('f2').value.trim();
-                    const f4 = document.getElementById('f4').value.trim();
-                    const f8 = document.getElementById('f8').value.trim();
-                    const f9 = document.getElementById('f9').value.trim();
-                    const bd_d = document.getElementById('bd_d').value;
-                    const phoneRegex = /^[0-9]{10}$/;
-
-                    if(!f2) return Swal.showValidationMessage('กรุณากรอกชื่อ');
-                    if(!phoneRegex.test(f4)) return Swal.showValidationMessage('กรุณากรอกเบอร์โทรนักเรียนให้ครบ 10 หลัก');
-                    if(!bd_d) return Swal.showValidationMessage('กรุณาเลือกวันเกิด');
-                    if(!f8 || !phoneRegex.test(f9)) return Swal.showValidationMessage('กรุณากรอกข้อมูลผู้ปกครองและเบอร์โทรให้ครบ 10 หลัก');
-
-                    return {
-                        id: sid, prefix: document.getElementById('f1').value,
-                        fname: f2, lname: document.getElementById('f3').value.trim(),
-                        phone: f4, blood: document.getElementById('f5').value,
-                        allergy: document.getElementById('f6').value.trim(),
-                        level: document.getElementById('f_lvl').value,
-                        room: document.getElementById('f7').value,
-                        parent: f8, parentPhone: f9, 
-                        dob: `${bd_d}/${document.getElementById('bd_m').value}/${document.getElementById('bd_y').value}`
-                    }
+            <div id="parent-section" class="p-3 rounded bg-warning-subtle border border-warning mt-3">
+                <label class="mb-1 fw-bold small">ผู้ปกครอง (สำหรับติดต่อฉุกเฉิน)</label>
+                <input id="f8" class="form-control mb-2" placeholder="ชื่อ-นามสกุลผู้ปกครอง" value="${oldData?.parent || ''}">
+                <input id="f9" class="form-control border-danger" placeholder="เบอร์โทรผู้ปกครอง (10 หลัก)" type="tel" maxlength="10" value="${oldData?.parentPhone || ''}">
+            </div>
+        </div>`,
+        confirmButtonText: 'บันทึกข้อมูล', confirmButtonColor: '#6A1B9A',
+        showCancelButton: true, cancelButtonText: 'ยกเลิก',
+        
+        // 2. เมื่อเปิด Popup ให้ตรวจสอบสถานะเริ่มต้น
+        didOpen: () => {
+            const lvl = document.getElementById('f_lvl');
+            const pSec = document.getElementById('parent-section');
+            const rBox = document.getElementById('room-box');
+            
+            // ฟังก์ชันซ่อน/แสดง ตามตัวเลือก
+            const toggleFields = () => {
+                const isAdult = ['ครู/บุคลากร', 'บุคคลทั่วไป'].includes(lvl.value);
+                if(isAdult) {
+                    pSec.style.display = 'none'; // ซ่อนช่องผู้ปกครอง
+                    rBox.style.visibility = 'hidden'; // ซ่อนช่องห้อง
+                } else {
+                    pSec.style.display = 'block'; // แสดงช่องผู้ปกครอง
+                    rBox.style.visibility = 'visible'; // แสดงช่องห้อง
                 }
-            }).then(async (r) => {
-                if(r.isConfirmed) {
-                    Swal.fire({didOpen:()=>Swal.showLoading(), allowOutsideClick: false});
-                    await setDoc(doc(db, "students", sid), r.value);
-                    window.checkStudent();
-                }
-            });
-        };
+            };
+
+            // เรียกทำงานทันทีและเมื่อมีการเปลี่ยนค่า
+            lvl.addEventListener('change', toggleFields);
+            toggleFields();
+        },
+
+        preConfirm: () => {
+            const lvl = document.getElementById('f_lvl').value;
+            const f2 = document.getElementById('f2').value.trim();
+            const f4 = document.getElementById('f4').value.trim();
+            let f8 = document.getElementById('f8').value.trim();
+            let f9 = document.getElementById('f9').value.trim();
+            let room = document.getElementById('f7').value;
+            
+            const bd_d = document.getElementById('bd_d').value;
+            const phoneRegex = /^[0-9]{10}$/;
+            const isAdult = ['ครู/บุคลากร', 'บุคคลทั่วไป'].includes(lvl);
+
+            if(!f2) return Swal.showValidationMessage('กรุณากรอกชื่อ');
+            if(!phoneRegex.test(f4)) return Swal.showValidationMessage('กรุณากรอกเบอร์โทรส่วนตัวให้ครบ 10 หลัก');
+            if(!bd_d) return Swal.showValidationMessage('กรุณาเลือกวันเกิด');
+
+            // 3. ตรวจสอบเงื่อนไข: ถ้าเป็นนักเรียน ต้องกรอกผู้ปกครอง / ถ้าเป็นผู้ใหญ่ ให้ข้ามได้
+            if (!isAdult) {
+                if(!f8 || !phoneRegex.test(f9)) return Swal.showValidationMessage('นักเรียนต้องกรอกข้อมูลผู้ปกครองและเบอร์โทรให้ครบถ้วน');
+            } else {
+                // ถ้าเป็นผู้ใหญ่ ให้ใส่ค่าขีดกลางอัตโนมัติ เพื่อไม่ให้ database error
+                f8 = '-';
+                f9 = '-';
+                room = '-';
+            }
+
+            return {
+                id: sid, prefix: document.getElementById('f1').value,
+                fname: f2, lname: document.getElementById('f3').value.trim(),
+                phone: f4, blood: document.getElementById('f5').value,
+                allergy: document.getElementById('f6').value.trim(),
+                level: lvl,
+                room: room,
+                parent: f8, parentPhone: f9, 
+                dob: `${bd_d}/${document.getElementById('bd_m').value}/${document.getElementById('bd_y').value}`
+            }
+        }
+    }).then(async (r) => {
+        if(r.isConfirmed) {
+            Swal.fire({didOpen:()=>Swal.showLoading(), allowOutsideClick: false});
+            await setDoc(doc(db, "students", sid), r.value);
+            window.checkStudent(); // รีโหลดเพื่อไปขั้นตอนยืนยัน
+        }
+    });
+};
 
         window.confirmVisit = (sid, data) => {
     // --- 1. เรียกใช้ฟังก์ชันปิดบังเบอร์โทรศัพท์ ---
