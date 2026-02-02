@@ -113,9 +113,9 @@
         
         // --- เพิ่มฟังก์ชัน Masking สำหรับปิดบังเบอร์โทรศัพท์ ---
         const maskPhone = (phone) => {
-            if (!phone || phone.length < 10) return "xxxxxxxxxx";
-            // แสดงเฉพาะตัวท้าย 2 ตัว เช่น xxxxxxxx07
-            return "xxxxxxxx" + phone.substring(8);
+            if (!phone || phone.length < 10) return "XXXXXXXXXX";
+            // แสดงเฉพาะตัวท้าย 2 ตัว เช่น XXXXXXXXXX07
+            return "XXXXXX" + phone.substring(6);
         };
         
         window.checkStudent = async () => {
@@ -183,7 +183,7 @@
                     </div>
                     <div class="mb-2">
                          <label class="mb-1 small text-danger">เบอร์โทร (10 หลัก)</label>
-                         <input id="f4" class="form-control border-danger" type="tel" maxlength="10" placeholder="08xxxxxxxx" value="${oldData?.phone || ''}">
+                         <input id="f4" class="form-control border-danger" type="tel" maxlength="10" placeholder="08XXXXXXXX" value="${oldData?.phone || ''}">
                     </div>
                     <label class="mb-1 small">วัน/เดือน/ปีเกิด</label><div class="input-group mb-2"><select id="bd_d" class="form-select">${dOpt}</select><select id="bd_m" class="form-select">${mOpt}</select><select id="bd_y" class="form-select">${yOpt}</select></div>
                     <div class="mb-2">
