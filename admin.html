@@ -523,91 +523,126 @@
         };
 
         window.exportReport = async (mode) => {
-            let start, end, filename;
-            const now = new Date();
+    let start, end, filename;
+    const now = new Date();
 
-            if (mode === 'day') {
-                start = new Date(now.setHours(0,0,0,0));
-                end = new Date(now.setHours(23,59,59,999));
-                filename = `Report_Daily_${now.toLocaleDateString('th-TH').replace(/\//g,'-')}`;
-            }
-            else if (mode === 'month') {
-                start = new Date(now.getFullYear(), now.getMonth(), 1);
-                end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-                filename = `Report_Monthly_${now.getMonth()+1}-${now.getFullYear()+543}`;
-            }
-            else if (mode === 'year') {
-                const y = now.getMonth() < 4 ? now.getFullYear() - 1 : now.getFullYear();
-                start = new Date(y, 4, 1);
-                end = new Date(y + 1, 3, 30, 23, 59, 59);
-                filename = `Report_Year_${y+543}`;
-            }
-            else if (mode === 'term') {
-                const { value: formValues } = await Swal.fire({
-                    title: 'เลือกเทอม/ปีการศึกษา',
-                    html: `
-                        <select id="swal-term" class="form-select mb-2">
-                            <option value="1">เทอม 1 (1 พ.ค. - 31 ต.ค.)</option>
-                            <option value="2">เทอม 2 (1 พ.ย. - 30 เม.ย.)</option>
-                        </select>
-                        <input id="swal-year" type="number" class="form-control" value="${now.getFullYear()+543}" placeholder="ปี พ.ศ.">
-                    `,
-                    focusConfirm: false,
-                    preConfirm: () => [document.getElementById('swal-term').value, document.getElementById('swal-year').value]
-                });
-                if (!formValues) return;
-                const [term, thYear] = formValues;
-                const enYear = parseInt(thYear) - 543;
-                if (term === '1') {
-                    start = new Date(enYear, 4, 1);
-                    end = new Date(enYear, 9, 31, 23, 59, 59);
-                } else {
-                    start = new Date(enYear, 10, 1);
-                    end = new Date(enYear + 1, 3, 30, 23, 59, 59);
-                }
-                filename = `Report_Term${term}_${thYear}`;
-            }
-            else { 
-                start = new Date(2000, 0, 1);
-                end = new Date();
-                filename = `Report_All`;
-            }
+    // --- 1. ปรับปรุงเงื่อนไขการเลือกช่วงเวลา ---
+    if (mode === 'day') {
+        // เด้งถามวันที่
+        const { value: selectedDate } = await Swal.fire({
+            title: 'เลือกวันที่ต้องการออกรายงาน',
+            input: 'date',
+            inputValue: new Date().toISOString().split('T')[0], // ค่าเริ่มต้นคือวันนี้
+            confirmButtonText: 'ตกลง',
+            showCancelButton: true,
+            cancelButtonText: 'ยกเลิก'
+        });
 
-            Swal.fire({title:'<i class="fas fa-spinner fa-spin"></i> กำลังเตรียมไฟล์...', didOpen:()=>Swal.showLoading()});
-            
-            const q = query(collection(db, "visits"), where("timestamp", ">=", start), where("timestamp", "<=", end), orderBy("timestamp", "desc"));
-            const snap = await getDocs(q);
+        if (!selectedDate) return; // ถ้ากดยกเลิกให้หยุดทำงาน
 
-            if(snap.empty) {
-                Swal.fire('ไม่พบข้อมูล', 'ไม่มีข้อมูลในช่วงเวลาที่เลือก', 'info');
-                return;
-            }
+        start = new Date(selectedDate);
+        start.setHours(0, 0, 0, 0);
+        end = new Date(selectedDate);
+        end.setHours(23, 59, 59, 999);
+        
+        // ตั้งชื่อไฟล์ตามวันที่เลือก
+        const d = start.getDate();
+        const m = start.getMonth() + 1;
+        const y = start.getFullYear() + 543;
+        filename = `Report_Daily_${d}-${m}-${y}`;
+    }
+    else if (mode === 'month') {
+        // เด้งถามเดือน
+        const { value: selectedMonth } = await Swal.fire({
+            title: 'เลือกเดือนที่ต้องการ',
+            html: `<input type="month" id="swal-month" class="form-control" value="${new Date().toISOString().slice(0, 7)}">`,
+            confirmButtonText: 'ตกลง',
+            showCancelButton: true,
+            cancelButtonText: 'ยกเลิก',
+            preConfirm: () => document.getElementById('swal-month').value
+        });
 
-            let csv = "\uFEFFวันที่,เวลา,รหัสนักเรียน,ชื่อ-สกุล,ระดับชั้น,ห้อง,อาการ,รายละเอียด,ยาที่จ่าย\n";
-            snap.forEach(d => {
-            const v = d.data();
+        if (!selectedMonth) return;
+
+        const [year, month] = selectedMonth.split('-').map(Number);
+        start = new Date(year, month - 1, 1);
+        end = new Date(year, month, 0, 23, 59, 59);
+        filename = `Report_Monthly_${month}-${year+543}`;
+    }
+    else if (mode === 'year') {
+        // แบบรายปีการศึกษา (คงเดิม)
+        const y = now.getMonth() < 4 ? now.getFullYear() - 1 : now.getFullYear();
+        start = new Date(y, 4, 1);
+        end = new Date(y + 1, 3, 30, 23, 59, 59);
+        filename = `Report_Year_${y+543}`;
+    }
+    else if (mode === 'term') {
+        // แบบรายเทอม (คงเดิม)
+        const { value: formValues } = await Swal.fire({
+            title: 'เลือกเทอม/ปีการศึกษา',
+            html: `
+                <select id="swal-term" class="form-select mb-2">
+                    <option value="1">เทอม 1 (1 พ.ค. - 31 ต.ค.)</option>
+                    <option value="2">เทอม 2 (1 พ.ย. - 30 เม.ย.)</option>
+                </select>
+                <input id="swal-year" type="number" class="form-control" value="${now.getFullYear()+543}" placeholder="ปี พ.ศ.">
+            `,
+            focusConfirm: false,
+            preConfirm: () => [document.getElementById('swal-term').value, document.getElementById('swal-year').value]
+        });
+        if (!formValues) return;
+        const [term, thYear] = formValues;
+        const enYear = parseInt(thYear) - 543;
+        if (term === '1') {
+            start = new Date(enYear, 4, 1);
+            end = new Date(enYear, 9, 31, 23, 59, 59);
+        } else {
+            start = new Date(enYear, 10, 1);
+            end = new Date(enYear + 1, 3, 30, 23, 59, 59);
+        }
+        filename = `Report_Term${term}_${thYear}`;
+    }
+    else { 
+        // ทั้งหมด (คงเดิม)
+        start = new Date(2000, 0, 1);
+        end = new Date();
+        filename = `Report_All`;
+    }
+
+    Swal.fire({title:'<i class="fas fa-spinner fa-spin"></i> กำลังเตรียมไฟล์...', didOpen:()=>Swal.showLoading()});
     
-             // 1. ค้นหาข้อมูลล่าสุดของนักเรียนคนนี้จากตัวแปร allStudents
-             const currentStd = allStudents.find(s => s.id === v.studentId);
-    
-             // 2. ถ้าเจอข้อมูลปัจจุบัน ให้ใช้ข้อมูลนั้น ถ้าไม่เจอ(เช่น นักเรียนถูกลบไปแล้ว) ให้ใช้ข้อมูลเก่าใน visit
-             const showLevel = currentStd ? currentStd.level : v.level;
-            const showRoom = currentStd ? currentStd.room : v.room;
-    
-            const date = v.timestamp ? new Date(v.timestamp.seconds*1000) : new Date();
-            const clean = t => `"${(t||'').replace(/"/g,'""')}"`;
-    
-            // 3. เปลี่ยนตัวแปรที่ส่งเข้า csv เป็น showLevel และ showRoom
-            csv += `${date.toLocaleDateString('th-TH')},${date.toLocaleTimeString('th-TH')},${clean(v.studentId)},${clean(v.studentName)},${clean(showLevel)},${clean(showRoom)},${clean(v.category)},${clean(v.detail)},${clean(v.medicine)}\n`;
-            });
+    // --- 2. ดึงข้อมูลและสร้าง CSV (รวมโค้ดแก้ปัญหาข้อมูลไม่อัปเดต) ---
+    const q = query(collection(db, "visits"), where("timestamp", ">=", start), where("timestamp", "<=", end), orderBy("timestamp", "desc"));
+    const snap = await getDocs(q);
 
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a"); 
-            link.href = URL.createObjectURL(blob); 
-            link.download = `${filename}.csv`; 
-            link.click(); 
-            Swal.close();
-        };
+    if(snap.empty) {
+        Swal.fire('ไม่พบข้อมูล', 'ไม่มีข้อมูลในช่วงเวลาที่เลือก', 'info');
+        return;
+    }
+
+    let csv = "\uFEFFวันที่,เวลา,รหัสนักเรียน/เบอร์โทร,ชื่อ-สกุล,ระดับชั้น,ห้อง,อาการ,รายละเอียด,ยาที่จ่าย\n";
+    
+    snap.forEach(d => {
+        const v = d.data();
+        
+        // ค้นหาข้อมูลล่าสุดของนักเรียนคนนี้จากตัวแปร allStudents (เพื่อแก้ปัญหาข้อมูลไม่อัปเดต)
+        const currentStd = allStudents.find(s => s.id === v.studentId);
+        const showLevel = currentStd ? currentStd.level : v.level;
+        const showRoom = currentStd ? currentStd.room : v.room;
+        
+        const date = v.timestamp ? new Date(v.timestamp.seconds*1000) : new Date();
+        const clean = t => `"${(t||'').replace(/"/g,'""')}"`;
+        
+        csv += `${date.toLocaleDateString('th-TH')},${date.toLocaleTimeString('th-TH')},${clean(v.studentId)},${clean(v.studentName)},${clean(showLevel)},${clean(showRoom)},${clean(v.category)},${clean(v.detail)},${clean(v.medicine)}\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a"); 
+    link.href = URL.createObjectURL(blob); 
+    link.download = `${filename}.csv`; 
+    link.click(); 
+    Swal.close();
+};
 
         window.filterStd = () => {
             const k = document.getElementById('srch').value;
