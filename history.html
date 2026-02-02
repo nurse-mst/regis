@@ -58,11 +58,18 @@
                 <h5 class="fw-bold" style="color:#6A1B9A">ตรวจสอบประวัติการรักษา</h5>
             </div>
             <div class="mb-2">
-                <label class="small text-muted mb-1">รหัสนักเรียน</label>
-                <input type="number" id="sid" class="form-control" placeholder="ระบุรหัสนักเรียน">
+                <label class="small text-muted mb-1"> <b>นักเรียน:</b> ใช้รหัสนักเรียน 
+              <b>ครู/บุคลากร:</b> ใช้รหัสครู/บุคลากร<br>
+              <b>บุคคลทั่วไป:</b> ใช้เบอร์โทรศัพท์<br></label>
+               
+              
+                
+                <input type="number" id="sid" class="form-control" placeholder="ระบุรหัสนักเรียน/ครู/บุคลากร/เบอร์โทร">
+                <div class="form-text mt-2 text-muted" style="font-size: 0.85rem;">
+            </div>
             </div>
             <div class="mb-3">
-                <label class="small text-muted mb-1">เบอร์โทรศัพท์</label>
+               
                 <input type="tel" id="phone" class="form-control" placeholder="ระบุเบอร์โทรศัพท์">
             </div>
             <button onclick="fetchH()" class="btn w-100 fw-bold btn-check-history">ตรวจสอบข้อมูล</button>
@@ -143,7 +150,7 @@
                                 <span class="badge bg-primary rounded-pill">${v.category}</span>
                                 <span class="text-muted" style="font-size: 0.75rem;">${date}</span>
                             </div>
-                            <div class="fw-bold mb-1" style="font-size: 0.95rem;">อาการ/รายละเอียด:</div>
+                            <div class="fw-bold mb-1" style="font-size: 0.95rem;">รายละเอียด:</div>
                             <div class="text-secondary small mb-2">${v.detail || '-'}</div>
                             <div class="pt-2 border-top">
                                 <span class="small fw-bold text-success">💊 ยาที่ได้รับ: ${v.medicine || 'ไม่มี'}</span>
