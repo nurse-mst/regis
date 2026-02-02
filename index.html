@@ -241,7 +241,7 @@
                 <p class="mb-1 small"><b>เบอร์โทร:</b> ${safePhone}</p> <p class="mb-1 small"><b>ชั้น/ห้อง:</b> <span class="badge bg-secondary">${data.level} / ${data.room}</span></p>
                 <p class="mb-0 small"><b>ประวัติการแพ้:</b> <span class="text-danger fw-bold">${data.allergy}</span></p>
                </div>`,
-        showCancelButton: true, confirmButtonText: 'ยืนยันส่งรายชื่อ', confirmButtonColor: '#6A1B9A', cancelButtonText: 'ยกเลิก'
+        showCancelButton: true, confirmButtonText: 'ยืนยันเข้ารับบริการ', confirmButtonColor: '#6A1B9A', cancelButtonText: 'ยกเลิก'
     }).then(async (r) => {
         if(r.isConfirmed) {
             Swal.fire({didOpen:()=>Swal.showLoading(), allowOutsideClick: false});
