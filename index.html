@@ -153,10 +153,10 @@
 
         window.registerForm = (sid, oldData) => {
     // 1. เพิ่มตัวเลือกสำหรับบุคคลอื่นที่ไม่ใช่นักเรียน
-    let levels = ['ม.1','ม.2','ม.3','ม.4','ม.5','ม.6', 'ครู/บุคลากร', 'บุคคลทั่วไป'];
+    let levels = ['เลือก','ม.1','ม.2','ม.3','ม.4','ม.5','ม.6', 'ครู/บุคลากร', 'บุคคลทั่วไป'];
     
     let rooms = '<option value="-">-</option>'; 
-    for(let i=1; i<=15; i++) rooms += `<option value="${i}" ${oldData?.room == i ? 'selected' : ''}>ห้อง ${i}</option>`;
+    for(let i=1; i<=10; i++) rooms += `<option value="${i}" ${oldData?.room == i ? 'selected' : ''}>ห้อง ${i}</option>`;
     
     let lOpt = levels.map(l => `<option value="${l}" ${oldData?.level == l ? 'selected':''}>${l}</option>`).join('');
     
@@ -185,11 +185,11 @@
                 <div class="col-6"><label class="mb-1 small text-primary fw-bold">สถานะ/ระดับชั้น</label><select id="f_lvl" class="form-select">${lOpt}</select></div>
                 <div class="col-6" id="room-box"><label class="mb-1 small">ห้อง</label><select id="f7" class="form-select">${rooms}</select></div>
                 <div class="col-12"><label class="mb-1 small">เลือด</label><select id="f5" class="form-select">
+                    <option ${oldData?.blood === '-' ? 'selected' : ''} value="-">ไม่ทราบ</option>
                     <option ${oldData?.blood === 'A' ? 'selected' : ''}>A</option>
                     <option ${oldData?.blood === 'B' ? 'selected' : ''}>B</option>
                     <option ${oldData?.blood === 'O' ? 'selected' : ''}>O</option>
                     <option ${oldData?.blood === 'AB' ? 'selected' : ''}>AB</option>
-                    <option ${oldData?.blood === '-' ? 'selected' : ''} value="-">ไม่ทราบ</option>
                  </select></div>
             </div>
             <div class="mb-2">
@@ -287,7 +287,7 @@
         title: 'ยืนยันข้อมูลเข้ารับบริการ',
         html: `<div class="p-3 border rounded text-start bg-light">
                 <h5 class="text-primary fw-bold mb-2">${data.prefix}${data.fname} ${data.lname}</h5>
-                <p class="mb-1 small"><b>เบอร์โทร:</b> ${safePhone}</p> <p class="mb-1 small"><b>ชั้น/ห้อง:</b> <span class="badge bg-secondary">${data.level} / ${data.room}</span></p>
+                <p class="mb-1 small"><b>เบอร์โทร:</b> ${safePhone}</p> <p class="mb-1 small"><b>สถานะ/ระดับชั้น:</b> <span class="badge bg-secondary">${data.level} / ${data.room}</span></p>
                 <p class="mb-0 small"><b>ประวัติการแพ้:</b> <span class="text-danger fw-bold">${data.allergy}</span></p>
                </div>`,
         showCancelButton: true, confirmButtonText: 'ยืนยันเข้ารับบริการ', confirmButtonColor: '#6A1B9A', cancelButtonText: 'ยกเลิก'
