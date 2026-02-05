@@ -172,7 +172,7 @@
             
             let dOpt = '<option value="">วัน</option>'; for(let i=1; i<=31; i++) dOpt += `<option value="${i}">${i}</option>`;
             let mOpt = '<option value="">เดือน</option>'; ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."].forEach((m,i)=> mOpt+=`<option value="${i+1}">${m}</option>`);
-            let yOpt = '<option value="">ปี พ.ศ.</option>'; let cy = new Date().getFullYear()+543; for(let i=cy-5; i>=cy-60; i--) yOpt += `<option value="${i}">${i}</option>`;
+            let yOpt = '<option value="">ปี</option>'; let cy = new Date().getFullYear()+543; for(let i=cy-5; i>=cy-60; i--) yOpt += `<option value="${i}">${i}</option>`;
 
             Swal.fire({
                 title: oldData ? '<i class="fas fa-user-edit text-primary"></i> แก้ไขข้อมูล' : '<i class="fas fa-user-plus text-primary"></i> ลงทะเบียนใหม่',
