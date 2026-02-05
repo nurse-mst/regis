@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-    <title>NURSE - MST</title>
+    <title>FIRST AID ROOM - MST</title>
     <link rel="icon" type="image/png" href="https://i.postimg.cc/gc78j2ZM/IMG-8784.png">
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -86,16 +86,17 @@
         <div class="logo-badge"><img src="https://i.postimg.cc/gc78j2ZM/IMG-8784.png" width="100%"></div>
         <div class="pt-4 mb-4">
             <h3 class="fw-bold" style="color: var(--primary)">ลงทะเบียนเข้ารับบริการ</h3>
-            <p class="text-muted small">FAR - MST</p>
-        </div>
-        <div class="mb-4">
-            <input type="tel" id="sid" class="form-control text-center fs-5 fw-bold" maxlength="13" placeholder="XXXXX" inputmode="numeric">
-            
+            <p class="text-muted small">FIRST AID ROOM - MST</p>
             <div class="form-text mt-2 text-muted" style="font-size: 0.85rem;">
                 <i class="fas fa-user-graduate me-1"></i>  <b>นักเรียน:</b> ใช้รหัสนักเรียน<br>
                 <i class="fas fa-user-tie me-1"></i> <b>ครู/บุคลากร:</b> ใช้รหัสครู/บุคลากร<br>
                 <i class="fa-solid fa-user"></i>  <b>บุคคลทั่วไป:</b> ใช้เลขบัตรประชาชน
             </div>
+        </div>
+        <div class="mb-4">
+            <input type="tel" id="sid" class="form-control text-center fs-5 fw-bold" maxlength="13" placeholder="ระบุรหัส" inputmode="numeric">
+            
+            
         </div>
         <button onclick="checkStudent()" class="btn btn-purple shadow">ตรวจสอบข้อมูล / เข้ารับบริการ <i class="fas fa-search ms-2"></i></button>
         <div class="mt-4"><a href="history.html" class="text-decoration-none text-muted small"><i class="fas fa-history me-1"></i> ประวัติการรักษา</a></div>
@@ -126,7 +127,21 @@
         
         window.checkStudent = async () => {
             const sid = document.getElementById('sid').value;
-            if(!sid) return Swal.fire('แจ้งเตือน','กรุณากรอกรหัสนักเรียน','warning');
+            
+            // --- เริ่มส่วนที่แก้ไข: ตรวจสอบความถูกต้องของรหัส ---
+            if(!sid) return Swal.fire('แจ้งเตือน','กรุณากรอกรหัส','warning');
+            
+            // ตรวจสอบความยาว: ต้องเป็น 3, 5 หรือ 13 หลักเท่านั้น
+            if (sid.length !== 3 && sid.length !== 5 && sid.length !== 13) {
+                return Swal.fire({
+                    icon: 'warning',
+                    title: 'รูปแบบรหัสไม่ถูกต้อง',
+                    html: 'กรุณากรอกรหัสให้ถูกต้องตามประเภท<br>' +
+                          '<i class="fas fa-user-tie me-1"></i> <b>รหัสครู/บุคลากร 3 หลัก:</b> สำหรับครู/บุคลากร<br>' +
+                          '<i class="fas fa-user-graduate me-1"></i> <b>รหัสนักเรียน 5 หลัก:</b> สำหรับนักเรียน<br>' +
+                          '<i class="fa-solid fa-user"></i> <b>เลขบัตรประชาชน 13 หลัก:</b> สำหรับบุคคลทั่วไป'
+                });
+            }
             
             Swal.fire({ title: 'กำลังตรวจสอบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             
@@ -152,25 +167,29 @@
         };
 
         window.registerForm = (sid, oldData) => {
-    // 1. เพิ่มตัวเลือกสำหรับบุคคลอื่นที่ไม่ใช่นักเรียน
+    // --- ส่วนเตรียมข้อมูลตัวเลือก (เหมือนเดิม) ---
     let levels = ['เลือก','ม.1','ม.2','ม.3','ม.4','ม.5','ม.6', 'ครู/บุคลากร', 'บุคคลทั่วไป'];
-    
     let rooms = '<option value="-">-</option>'; 
     for(let i=1; i<=10; i++) rooms += `<option value="${i}" ${oldData?.room == i ? 'selected' : ''}>ห้อง ${i}</option>`;
-    
     let lOpt = levels.map(l => `<option value="${l}" ${oldData?.level == l ? 'selected':''}>${l}</option>`).join('');
     
     let dOpt = '<option value="">วัน</option>'; for(let i=1; i<=31; i++) dOpt += `<option value="${i}">${i}</option>`;
     let mOpt = '<option value="">เดือน</option>'; ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."].forEach((m,i)=> mOpt+=`<option value="${i+1}">${m}</option>`);
-    let yOpt = '<option value="">ปี พ.ศ.</option>'; let cy = new Date().getFullYear()+543; for(let i=cy-5; i>=cy-60; i--) yOpt += `<option value="${i}">${i}</option>`; // ปรับปีให้กว้างขึ้นเผื่อผู้ใหญ่
+    let yOpt = '<option value="">ปี พ.ศ.</option>'; let cy = new Date().getFullYear()+543; for(let i=cy-5; i>=cy-60; i--) yOpt += `<option value="${i}">${i}</option>`;
 
     Swal.fire({
-        title: oldData ? 'แก้ไขข้อมูล' : 'ลงทะเบียนใหม่',
-        html: `<div class="text-start p-1" style="font-family:'Prompt'; font-size: 0.9rem;">
-            <p class="text-center text-muted mb-3 small">กรุณากรอกข้อมูลให้ครบถ้วน</p>
+        title: oldData ? '<i class="fas fa-user-edit text-primary"></i> แก้ไขข้อมูล' : '<i class="fas fa-user-plus text-primary"></i> ลงทะเบียนผู้ป่วยใหม่',
+        html: `
+        <div class="text-start px-1" style="font-family:'Prompt'; font-size: 0.9rem;">
+            
             <div class="row g-2 mb-2">
-                <div class="col-4"><label class="mb-1 small">คำนำหน้า</label>
-                    <select id="f1" class="form-select">
+                <div class="col-5">
+                    <label class="form-label small fw-bold mb-1 text-muted">รหัส/เลขบัตร</label>
+                    <input class="form-control shadow-sm bg-secondary-subtle text-center fw-bold text-muted" value="${sid}" readonly disabled>
+                </div>
+                <div class="col-7">
+                    <label class="form-label small fw-bold mb-1">คำนำหน้า</label>
+                    <select id="f1" class="form-select shadow-sm bg-light">
                         <option ${oldData?.prefix === 'นาย' ? 'selected' : ''}>นาย</option>
                         <option ${oldData?.prefix === 'นางสาว' ? 'selected' : ''}>นางสาว</option>
                         <option ${oldData?.prefix === 'นาง' ? 'selected' : ''}>นาง</option>
@@ -178,57 +197,103 @@
                         <option ${oldData?.prefix === 'ด.ญ.' ? 'selected' : ''}>ด.ญ.</option>
                     </select>
                 </div>
-                <div class="col-4"><label class="mb-1 small">ชื่อ</label><input id="f2" class="form-control" value="${oldData?.fname || ''}"></div>
-                <div class="col-4"><label class="mb-1 small">สกุล</label><input id="f3" class="form-control" value="${oldData?.lname || ''}"></div>
-            </div>
-            <div class="row g-2 mb-2">
-                <div class="col-6"><label class="mb-1 small text-primary fw-bold">สถานะ/ระดับชั้น</label><select id="f_lvl" class="form-select">${lOpt}</select></div>
-                <div class="col-6" id="room-box"><label class="mb-1 small">ห้อง</label><select id="f7" class="form-select">${rooms}</select></div>
-                <div class="col-12"><label class="mb-1 small">เลือด</label><select id="f5" class="form-select">
-                    <option ${oldData?.blood === '-' ? 'selected' : ''} value="-">ไม่ทราบ</option>
-                    <option ${oldData?.blood === 'A' ? 'selected' : ''}>A</option>
-                    <option ${oldData?.blood === 'B' ? 'selected' : ''}>B</option>
-                    <option ${oldData?.blood === 'O' ? 'selected' : ''}>O</option>
-                    <option ${oldData?.blood === 'AB' ? 'selected' : ''}>AB</option>
-                 </select></div>
-            </div>
-            <div class="mb-2">
-                 <label class="mb-1 small text-danger">เบอร์โทร (10 หลัก)</label>
-                 <input id="f4" class="form-control border-danger" type="tel" maxlength="10" placeholder="08XXXXXXXX" value="${oldData?.phone || ''}">
-            </div>
-            <label class="mb-1 small">วัน/เดือน/ปีเกิด</label><div class="input-group mb-2"><select id="bd_d" class="form-select">${dOpt}</select><select id="bd_m" class="form-select">${mOpt}</select><select id="bd_y" class="form-select">${yOpt}</select></div>
-            <div class="mb-2">
-                 <label class="text-danger fw-bold mb-1 small">แพ้ยา/อาหาร (ถ้าไม่มีขีด - )</label><input id="f6" class="form-control" value="${oldData?.allergy || '-'}">
+                
+                <div class="col-12">
+                    <label class="form-label small fw-bold mb-1">ชื่อจริง</label>
+                    <input id="f2" class="form-control shadow-sm" placeholder="กรอกชื่อจริง" value="${oldData?.fname || ''}">
+                </div>
+                <div class="col-12">
+                    <label class="form-label small fw-bold mb-1">นามสกุล</label>
+                    <input id="f3" class="form-control shadow-sm" placeholder="กรอกนามสกุล" value="${oldData?.lname || ''}">
+                </div>
             </div>
             
-            <div id="parent-section" class="p-3 rounded bg-warning-subtle border border-warning mt-3">
-                <label class="mb-1 fw-bold small">ผู้ปกครอง (สำหรับติดต่อฉุกเฉิน)</label>
-                <input id="f8" class="form-control mb-2" placeholder="ชื่อ-นามสกุลผู้ปกครอง" value="${oldData?.parent || ''}">
-                <input id="f9" class="form-control border-danger" placeholder="เบอร์โทรผู้ปกครอง (10 หลัก)" type="tel" maxlength="10" value="${oldData?.parentPhone || ''}">
+            <div class="row g-2 mb-2">
+                <div class="col-6">
+                    <label class="form-label small fw-bold mb-1 text-primary">สถานะ/ระดับชั้น</label>
+                    <select id="f_lvl" class="form-select shadow-sm fw-bold text-primary bg-primary-subtle border-primary-subtle">${lOpt}</select>
+                </div>
+                <div class="col-6" id="room-box">
+                    <label class="form-label small fw-bold mb-1">ห้อง</label>
+                    <select id="f7" class="form-select shadow-sm">${rooms}</select>
+                </div>
             </div>
+
+            <div class="mb-3">
+                 <label class="form-label small fw-bold mb-1">เบอร์โทรศัพท์</label>
+                 <div class="input-group shadow-sm">
+                    <span class="input-group-text bg-white text-muted"><i class="fas fa-phone"></i></span>
+                    <input id="f4" class="form-control" type="tel" maxlength="10" placeholder="0XXXXXXXXX" value="${oldData?.phone || ''}">
+                 </div>
+            </div>
+
+            <hr class="my-3 text-muted opacity-25">
+
+            <div class="row g-2 mb-2">
+                <div class="col-4">
+                    <label class="form-label small fw-bold mb-1">กรุ๊ปเลือด</label>
+                    <select id="f5" class="form-select shadow-sm">
+                        <option value="-" disabled selected>-</option>
+                        <option ${oldData?.blood === '-' ? 'selected' : ''} value="-">ไม่ทราบ</option>
+                        <option ${oldData?.blood === 'A' ? 'selected' : ''}>A</option>
+                        <option ${oldData?.blood === 'B' ? 'selected' : ''}>B</option>
+                        <option ${oldData?.blood === 'O' ? 'selected' : ''}>O</option>
+                        <option ${oldData?.blood === 'AB' ? 'selected' : ''}>AB</option>
+                    </select>
+                </div>
+                <div class="col-8">
+                    <label class="form-label small fw-bold mb-1">วันเกิด</label>
+                    <div class="input-group shadow-sm">
+                        <select id="bd_d" class="form-select px-1">${dOpt}</select>
+                        <select id="bd_m" class="form-select px-1">${mOpt}</select>
+                        <select id="bd_y" class="form-select px-1">${yOpt}</select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small fw-bold mb-1 text-danger">ประวัติแพ้ยา/อาหาร</label>
+                <input id="f6" class="form-control shadow-sm border-danger text-danger fw-bold" placeholder="ระบุ (ถ้าไม่มีขีด - )" value="${oldData?.allergy || '-'}">
+            </div>
+            
+            <div id="parent-section" class="p-3 rounded-4 mt-2 position-relative" style="background-color: #FFF9E6; border: 1px solid #FFEBA8;">
+                <h6 class="fw-bold text-dark mb-2" style="font-size: 0.85rem;"><i class="fas fa-user-shield text-warning me-1"></i> ผู้ปกครอง (ติดต่อฉุกเฉิน)</h6>
+                
+                <label class="form-label small text-muted mb-1">ชื่อ-นามสกุลผู้ปกครอง</label>
+                <input id="f8" class="form-control mb-2 shadow-sm border-0" value="${oldData?.parent || ''}">
+                
+                <label class="form-label small text-muted mb-1">เบอร์โทรผู้ปกครอง</label>
+                <input id="f9" class="form-control shadow-sm border-danger" type="tel" maxlength="10" placeholder="0XXXXXXXXX" value="${oldData?.parentPhone || ''}">
+            </div>
+
+            <div class="mt-2 text-center">
+                 <p class="text-muted mt-2 mb-0" style="font-size: 0.75rem;">
+                    <i class="fas fa-check-circle text-success me-1"></i> กรุณาตรวจสอบข้อมูลก่อนบันทึก
+                </p>
+            </div>
+
         </div>`,
-        confirmButtonText: 'บันทึกข้อมูล', confirmButtonColor: '#6A1B9A',
-        showCancelButton: true, cancelButtonText: 'ยกเลิก',
+        confirmButtonText: '<i class="fas fa-save me-1"></i> บันทึกข้อมูล', 
+        confirmButtonColor: '#6A1B9A',
+        showCancelButton: true, 
+        cancelButtonText: 'ยกเลิก',
+        customClass: { popup: 'rounded-5' },
         
-        // 2. เมื่อเปิด Popup ให้ตรวจสอบสถานะเริ่มต้น
         didOpen: () => {
             const lvl = document.getElementById('f_lvl');
             const pSec = document.getElementById('parent-section');
             const rBox = document.getElementById('room-box');
             
-            // ฟังก์ชันซ่อน/แสดง ตามตัวเลือก
             const toggleFields = () => {
                 const isAdult = ['ครู/บุคลากร', 'บุคคลทั่วไป'].includes(lvl.value);
                 if(isAdult) {
-                    pSec.style.display = 'none'; // ซ่อนช่องผู้ปกครอง
-                    rBox.style.visibility = 'hidden'; // ซ่อนช่องห้อง
+                    pSec.style.display = 'none';
+                    rBox.style.visibility = 'hidden';
                 } else {
-                    pSec.style.display = 'block'; // แสดงช่องผู้ปกครอง
-                    rBox.style.visibility = 'visible'; // แสดงช่องห้อง
+                    pSec.style.display = 'block';
+                    rBox.style.visibility = 'visible';
                 }
             };
-
-            // เรียกทำงานทันทีและเมื่อมีการเปลี่ยนค่า
             lvl.addEventListener('change', toggleFields);
             toggleFields();
         },
@@ -249,14 +314,10 @@
             if(!phoneRegex.test(f4)) return Swal.showValidationMessage('กรุณากรอกเบอร์โทรส่วนตัวให้ครบ 10 หลัก');
             if(!bd_d) return Swal.showValidationMessage('กรุณาเลือกวันเกิด');
 
-            // 3. ตรวจสอบเงื่อนไข: ถ้าเป็นนักเรียน ต้องกรอกผู้ปกครอง / ถ้าเป็นผู้ใหญ่ ให้ข้ามได้
             if (!isAdult) {
                 if(!f8 || !phoneRegex.test(f9)) return Swal.showValidationMessage('นักเรียนต้องกรอกข้อมูลผู้ปกครองและเบอร์โทรให้ครบถ้วน');
             } else {
-                // ถ้าเป็นผู้ใหญ่ ให้ใส่ค่าขีดกลางอัตโนมัติ เพื่อไม่ให้ database error
-                f8 = '-';
-                f9 = '-';
-                room = '-';
+                f8 = '-'; f9 = '-'; room = '-';
             }
 
             return {
@@ -264,8 +325,7 @@
                 fname: f2, lname: document.getElementById('f3').value.trim(),
                 phone: f4, blood: document.getElementById('f5').value,
                 allergy: document.getElementById('f6').value.trim(),
-                level: lvl,
-                room: room,
+                level: lvl, room: room,
                 parent: f8, parentPhone: f9, 
                 dob: `${bd_d}/${document.getElementById('bd_m').value}/${document.getElementById('bd_y').value}`
             }
@@ -274,33 +334,7 @@
         if(r.isConfirmed) {
             Swal.fire({didOpen:()=>Swal.showLoading(), allowOutsideClick: false});
             await setDoc(doc(db, "students", sid), r.value);
-            window.checkStudent(); // รีโหลดเพื่อไปขั้นตอนยืนยัน
-        }
-    });
-};
-
-        window.confirmVisit = (sid, data) => {
-    // --- 1. เรียกใช้ฟังก์ชันปิดบังเบอร์โทรศัพท์ ---
-    const safePhone = maskPhone(data.phone);
-    
-    Swal.fire({
-        title: 'ยืนยันข้อมูลเข้ารับบริการ',
-        html: `<div class="p-3 border rounded text-start bg-light">
-                <h5 class="text-primary fw-bold mb-2">${data.prefix}${data.fname} ${data.lname}</h5>
-                <p class="mb-1 small"><b>เบอร์โทร:</b> ${safePhone}</p> <p class="mb-1 small"><b>สถานะ/ระดับชั้น:</b> <span class="badge bg-secondary">${data.level} / ${data.room}</span></p>
-                <p class="mb-0 small"><b>ประวัติการแพ้:</b> <span class="text-danger fw-bold">${data.allergy}</span></p>
-               </div>`,
-        showCancelButton: true, confirmButtonText: 'ยืนยันเข้ารับบริการ', confirmButtonColor: '#6A1B9A', cancelButtonText: 'ยกเลิก'
-    }).then(async (r) => {
-        if(r.isConfirmed) {
-            Swal.fire({didOpen:()=>Swal.showLoading(), allowOutsideClick: false});
-            await addDoc(collection(db, "visits"), {
-                studentId: sid, studentName: `${data.prefix}${data.fname} ${data.lname}`,
-                level: data.level, room: data.room, timestamp: serverTimestamp(), status: "Pending",
-                category: "", detail: "", medicine: ""
-            });
-            Swal.fire('สำเร็จ', 'ส่งรายชื่อให้เจ้าหน้าที่แล้ว', 'success');
-            document.getElementById('sid').value = '';
+            window.checkStudent(); 
         }
     });
 };
