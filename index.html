@@ -165,7 +165,7 @@
 
         // ฟังก์ชันฟอร์มลงทะเบียน (แก้ไขล่าสุด: แสดงรหัสด้านบน + ชื่อสกุลเต็มบรรทัด)
         window.registerForm = (sid, oldData) => {
-            let levels = ['เลือก','ม.1','ม.2','ม.3','ม.4','ม.5','ม.6', 'ครู/บุคลากร', 'บุคคลทั่วไป'];
+            let levels = ['ม.1','ม.2','ม.3','ม.4','ม.5','ม.6', 'ครู/บุคลากร', 'บุคคลทั่วไป'];
             let rooms = '<option value="-">-</option>'; 
             for(let i=1; i<=10; i++) rooms += `<option value="${i}" ${oldData?.room == i ? 'selected' : ''}>ห้อง ${i}</option>`;
             let lOpt = levels.map(l => `<option value="${l}" ${oldData?.level == l ? 'selected':''}>${l}</option>`).join('');
